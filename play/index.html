@@ -333,6 +333,12 @@ text.cellnum.bad { fill: var(--error); }
   width: 36px; height: 36px; min-height: 36px; border-radius: 50%; font-size: 15px;
 }
 .win-detail { margin: 6px 0 12px; font-size: 14px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.win-share { margin-bottom: 10px; }
+.win-share[hidden] { display: none; }
+.win-share .btn {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.win-share .btn svg { width: 17px; height: 17px; color: var(--teal); flex: none; }
 .win-actions { display: flex; gap: 10px; }
 .btn {
   font-size: 15px; font-weight: 700; cursor: pointer;
@@ -774,6 +780,9 @@ text.cellnum.bad { fill: var(--error); }
       <button type="button" class="win-dismiss" id="btn-win-dismiss" aria-label="View board">⌄</button>
     </div>
     <p class="win-detail" id="win-detail"></p>
+    <div class="win-share" id="win-share" hidden>
+      <button type="button" class="btn secondary" id="btn-share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4"/><path d="m6.5 8.5 5.5-5.5 5.5 5.5"/><path d="M5 12.5V19a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6.5"/></svg><span id="lbl-share">Share Result</span></button>
+    </div>
     <div class="win-actions">
       <button type="button" class="btn primary" id="btn-again">New Puzzle</button>
       <button type="button" class="btn secondary" id="btn-change-size">Change Size</button>
@@ -1139,7 +1148,13 @@ var STR = {
     "winPractice": "Score {score} this run — practice. Official: {oscore} in {otime} · 🔥 {streak}-day streak",
     "winOfficial": "Score {score} · {time} · 🔥 {streak}-day streak",
     "winFree": "{base} · Score {score} · Best {best}",
-    "winNewBest": " — new best!"
+    "winNewBest": " — new best!",
+    "winShare": "Share Result",
+    "shareCopied": "Copied!",
+    "shareAppLine": "Sixways — the hex number-path puzzle",
+    "shareDaily": "🏁 Sixways Daily · {label} — ⏱ {time} · Score {score} · 🔥 {streakPhrase}",
+    "shareFreeplay": "Sixways — {cells}-cell {diff} completed in {time} · Score {score}",
+    "shareStreak": "{streak}-day streak"
   },
   fr: {
     "docTitle": "Sixways — démo gratuite",
@@ -1270,7 +1285,13 @@ var STR = {
     "winPractice": "Score {score} pour cette partie — entraînement. Officiel : {oscore} en {otime} · 🔥 série de {streak} jours",
     "winOfficial": "Score {score} · {time} · 🔥 série de {streak} jours",
     "winFree": "{base} · Score {score} · Record {best}",
-    "winNewBest": " — nouveau record !"
+    "winNewBest": " — nouveau record !",
+    "winShare": "Partager le résultat",
+    "shareCopied": "Copié !",
+    "shareAppLine": "Sixways — le puzzle de nombres en hexagones",
+    "shareDaily": "🏁 Sixways Daily · {label} — ⏱ {time} · Score {score} · 🔥 {streakPhrase}",
+    "shareFreeplay": "Sixways — grille de {cells} cases · {diff} · terminée en {time} · Score {score}",
+    "shareStreak": "série de {streak} jours"
   }
 };
 var LANG_KEY = "sixways.lang";
@@ -1995,6 +2016,66 @@ function renderWinText() {
   document.getElementById("win-detail").textContent = detail;
   document.getElementById("btn-again").textContent = mode === "daily" ? t("playAgain") : t("newPuzzle");
   document.getElementById("btn-change-size").textContent = mode === "daily" ? t("modeFree") : t("changeSize");
+  renderShareButton();
+}
+/* Share text (mirrors the app's ShareText, Batch 8): built ONLY
+   from the result facts the win card itself displays — for the
+   Daily Race that is the official write-once result, never a
+   replay's numbers. A daily with no recorded result has nothing
+   shareable (the app returns nil there too), so the button
+   hides. No path, grid or givens ever appear in the text. */
+function buildShareText() {
+  if (!G || !won) return null;
+  if (mode === "daily") {
+    if (dailyDay === null || !winRecord) return null;
+    return t("shareDaily", {
+      label: dailyDateLabel(dailyDay),
+      time: fmtTime(winRecord.elapsed * 1000),
+      score: winRecord.score,
+      streakPhrase: t("shareStreak", { streak: winRecord.streak })
+    }) + "\n" + t("shareAppLine");
+  }
+  return t("shareFreeplay", {
+    cells: G.N, diff: t("diff." + G.diff),
+    time: fmtTime(elapsedAccum),
+    score: winRecord ? winRecord.score : winScore
+  }) + "\n" + t("shareAppLine");
+}
+var shareFlashTimer = null;
+function renderShareButton() {
+  var wrap = document.getElementById("win-share");
+  if (!wrap) return;
+  wrap.hidden = !buildShareText();
+  if (shareFlashTimer) { clearTimeout(shareFlashTimer); shareFlashTimer = null; }
+  document.getElementById("lbl-share").textContent = t("winShare");
+}
+function flashShareCopied() {
+  var lbl = document.getElementById("lbl-share");
+  lbl.textContent = t("shareCopied");
+  if (shareFlashTimer) clearTimeout(shareFlashTimer);
+  shareFlashTimer = setTimeout(function () {
+    shareFlashTimer = null;
+    lbl.textContent = t("winShare");
+  }, 1600);
+}
+function legacyCopyShare(str, done) {
+  var ta = document.createElement("textarea");
+  ta.value = str;
+  ta.setAttribute("readonly", "");
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand("copy"); } catch (e) { /* the Copied! flash still confirms the attempt */ }
+  document.body.removeChild(ta);
+  done();
+}
+function copyShareText(str, done) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(str).then(done, function () { legacyCopyShare(str, done); });
+  } else {
+    legacyCopyShare(str, done);
+  }
 }
 function showWin() {
   won = true;
@@ -2506,6 +2587,16 @@ document.getElementById("btn-new").addEventListener("click", function () {
 document.getElementById("btn-again").addEventListener("click", function () {
   if (mode === "daily") { hideWin(); doRestart(); return; }
   newGame();
+});
+document.getElementById("btn-share").addEventListener("click", function () {
+  var text = buildShareText();
+  if (!text) return;
+  if (navigator.share) {
+    // A cancelled share sheet is silent — no error UI.
+    navigator.share({ title: "Sixways", text: text, url: "https://sixways.app/play" }).catch(function () {});
+    return;
+  }
+  copyShareText(text + "\nhttps://sixways.app/play", flashShareCopied);
 });
 
 /* ---------- Win card dismiss / reopen ---------- */
