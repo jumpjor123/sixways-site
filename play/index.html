@@ -100,6 +100,16 @@ footer p { margin: 0; margin-left: auto; color: var(--ink-soft); font-size: 0.9r
 /* Toolbar (settings pill, how-to, menu — all labelled) */
 .toolbar { display: flex; align-items: center; gap: 8px; min-height: 34px; flex-wrap: wrap; }
 .toolbar .spacer { flex: 1; }
+/* Mode switch: Free Play / Daily Race (Phase 2) */
+.mode-switch {
+  display: inline-flex; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 999px; padding: 2px; gap: 2px;
+}
+.mode-switch button {
+  border: 0; background: transparent; color: var(--ink-soft); cursor: pointer;
+  border-radius: 999px; font-size: 13px; font-weight: 700; padding: 4px 12px; min-height: 28px;
+}
+.mode-switch button[aria-pressed="true"] { background: var(--teal); color: var(--surface); }
 .pill {
   display: inline-flex; align-items: center; gap: 5px;
   background: var(--surface); color: var(--ink);
@@ -448,6 +458,7 @@ text.cellnum.bad { fill: var(--error); }
   header { padding-top: 6px; padding-bottom: 6px; }
   footer { padding-top: 12px; padding-bottom: 14px; }
   .toolbar { gap: 6px; }
+  .mode-switch button { font-size: 12px; padding: 4px 9px; }
   .pill { font-size: 12.5px; padding: 4px 10px; }
   .tool-btn { font-size: 12px; padding: 4px 10px; gap: 5px; }
   .coach { font-size: 12.5px; padding: 4px 4px 4px 10px; }
@@ -488,6 +499,10 @@ text.cellnum.bad { fill: var(--error); }
 </header>
 <main class="game">
 <div class="toolbar">
+  <div class="mode-switch" role="group" aria-label="Game mode">
+    <button type="button" id="mode-free" aria-pressed="true">Free Play</button>
+    <button type="button" id="mode-daily" aria-pressed="false">Daily Race</button>
+  </div>
   <span class="spacer"></span>
   <button type="button" class="pill" id="pill-settings" aria-haspopup="dialog"><span id="pill-label">36 · Medium</span> <span class="chev">▾</span></button>
   <button type="button" class="tool-btn" id="btn-howto" aria-label="How to play"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9.2"/><path d="M9.4 9.1a2.8 2.8 0 1 1 4.1 2.5c-.9.35-1.5 1-1.5 2v.4"/><circle cx="12" cy="17.2" r="0.7" fill="currentColor" stroke="none"/></svg>How to play<span class="dot" id="howto-dot"></span></button>
@@ -685,18 +700,31 @@ function buildWorkerSource() {
   parts.push(fallbackFromPath.toString());
   parts.push(buildFallbackPuzzle.toString());
   parts.push(generate.toString());
+  // Phase 2: the seeded Daily Race pipeline runs in the worker too.
+  parts.push("var SEED_SALT = 0x5369787761797321n;");
+  parts.push("var DAILY_SIDE = 4;");
+  parts.push('var DAILY_DIFF = "medium";');
+  parts.push(makeSeededRNG.toString());
+  parts.push(detNextBelow.toString());
+  parts.push(detUnitDouble.toString());
+  parts.push(detShuffled.toString());
+  parts.push(seededHamiltonianPath.toString());
+  parts.push(seededDfs.toString());
+  parts.push(carveAndProveSeeded.toString());
+  parts.push(dailySeed.toString());
+  parts.push(generateDaily.toString());
   parts.push(
     "self.onmessage = function (e) {" +
     "  var d = e.data;" +
     "  try {" +
-    "    var p = generate(d.side, d.diffKey);" +
-    "    if (!p) { self.postMessage({ requestId: d.requestId, ok: false }); return; }" +
-    "    self.postMessage({ requestId: d.requestId, ok: true, side: d.side, diffKey: d.diffKey," +
-    "      fallback: !!p.fallback, cells: p.cells, N: p.N," +
+    "    var p = d.mode === 'daily' ? generateDaily(d.day) : generate(d.side, d.diffKey);" +
+    "    if (!p) { self.postMessage({ requestId: d.requestId, ok: false, mode: d.mode || 'free', day: d.day }); return; }" +
+    "    self.postMessage({ requestId: d.requestId, ok: true, mode: d.mode || 'free', day: d.day, side: p.side, diffKey: p.diff," +
+    "      fallback: !!p.fallback, unranked: !!p.unranked, cells: p.cells, N: p.N," +
     "      solution: Array.from(p.solution.entries()), solByNum: p.solByNum," +
     "      givens: Array.from(p.givens.entries()), givenByNum: Array.from(p.givenByNum.entries())," +
     "      links: Array.from(p.links) });" +
-    "  } catch (err) { self.postMessage({ requestId: d.requestId, ok: false, error: String(err) }); }" +
+    "  } catch (err) { self.postMessage({ requestId: d.requestId, ok: false, mode: d.mode || 'free', day: d.day, error: String(err) }); }" +
     "};"
   );
   return parts.join("\n");
@@ -714,6 +742,14 @@ var undoStack = [];
 var hintsUsed = 0;
 var won = false;
 var showErrors = true;
+/* Phase 2: mode, scoring counters, record-once guard. mistakesCharged
+   follows the app's rule — a charge lands only for a non-hint
+   placement that leaves its own cell in conflict WHILE mistake
+   highlighting is on; a mistake the game hid is never charged. */
+var mode = "free";           // "free" | "daily"
+var dailyDay = null;         // day number of the committed daily board
+var mistakesCharged = 0;
+var winRecord = null;        // this board's recorded result (once per board)
 // Desired (UI) settings vs committed settings: the committed pair only
 // changes when a new board actually arrives, atomically with it.
 var desiredSide = 4, desiredDiff = "medium";
@@ -749,6 +785,47 @@ function computeLinkNbrs(puzzle) {
     m[a].push(b); m[b].push(a);
   });
   puzzle.linkNbrs = m;
+}
+
+/* ---------- Phase 2 storage: bests, daily history, daily boards ---------- */
+function lsGet(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+function lsSet(key, val) { try { localStorage.setItem(key, val); } catch (e) { /* storage unavailable */ } }
+function bestScore(count, diff) {
+  var v = lsGet("sixways.best." + count + "." + diff);
+  if (v === null) return null;
+  var n = +v;
+  return isFinite(n) ? n : null;
+}
+function loadDailyHistory() {
+  try {
+    var raw = lsGet("sixways.daily.history");
+    if (raw) { var h = JSON.parse(raw); if (h && h.results) return h; }
+  } catch (e) { /* fall through to a fresh history */ }
+  return emptyDailyHistory();
+}
+function saveDailyHistory(h) { lsSet("sixways.daily.history", JSON.stringify(h)); }
+function loadDailyBoards() {
+  try {
+    var raw = lsGet("sixways.daily.boards");
+    if (raw) { var b = JSON.parse(raw); if (b && typeof b === "object") return b; }
+  } catch (e) { /* fall through */ }
+  return {};
+}
+// The in-progress daily board, stored keyed by day (mirrors the
+// app's DailyStore): progress survives a reload, and re-entering a
+// finished day restores the won board.
+function saveDailyProgress() {
+  if (mode !== "daily" || dailyDay === null || !G) return;
+  var boards = loadDailyBoards();
+  boards[dailyDay] = {
+    entries: Array.from(placed.entries()),
+    hintsUsed: hintsUsed,
+    mistakesCharged: mistakesCharged,
+    elapsedMs: currentElapsedMs(),
+    won: won
+  };
+  Object.keys(boards).forEach(function (k) { if (dailyDay - (+k) > 31) delete boards[k]; });
+  lsSet("sixways.daily.boards", JSON.stringify(boards));
 }
 
 /* ---------- Timer helpers ---------- */
@@ -1093,6 +1170,7 @@ function snapshot(undoneNum) {
     entries: Array.from(placed.entries()),
     undoneNum: (undoneNum === undefined || undoneNum === null) ? null : undoneNum,
     hintsUsed: hintsUsed,
+    mistakesCharged: mistakesCharged,
     won: won,
     elapsedMs: currentElapsedMs(),
     clockRunning: startedAt !== null
@@ -1108,12 +1186,17 @@ function placeNum(num, cell, isHint) {
   var existing = placed.get(cell);
   if (existing !== undefined) placedByNum.delete(existing);
   placed.set(cell, num); placedByNum.set(num, cell);
+  // Mistake charge, evaluated on the final placement state, once per
+  // placement event (the app's rule): non-hint, mistakes visible,
+  // and the placed cell in conflict.
+  if (!isHint && showErrors && conflicts().has(cell)) mistakesCharged++;
   selectedCell = cell;
   ensureTimerRunning();
   setMsg("");
   advanceSelection(num);
   refresh();
   checkWin();
+  saveDailyProgress();
 }
 function advanceSelection(from) {
   for (var n = from + 1; n <= G.N; n++) if (cellOfNum(n) === -1) { selectedNum = n; return; }
@@ -1131,6 +1214,7 @@ function eraseCell(cell) {
   selectedNum = num; selectedCell = cell;
   setMsg("");
   refresh();
+  saveDailyProgress();
 }
 
 function onCellTap(cell) {
@@ -1175,8 +1259,57 @@ function isSolvedBoard() {
 function showWin() {
   won = true;
   freezeTimer(); // victory-screen time never enters the clock
-  document.getElementById("win-detail").textContent =
-    G.N + " cells · " + DIFF_NAMES[G.diff] + " · " + fmtTime(elapsedAccum) + " · " + hintsUsed + (hintsUsed === 1 ? " hint" : " hints");
+  // Scoring (Phase 2, the app's rules exactly): par by size x
+  // difficulty, hint -150, charged mistake -25, +2 per second under
+  // the par time capped at +25% of par, floor 0. Shown here, at
+  // completion, as in the app.
+  var elapsedSec = elapsedAccum / 1000;
+  var score = computeScore(G.N, G.diff, hintsUsed, mistakesCharged, elapsedSec);
+  var base = G.N + " cells · " + DIFF_NAMES[G.diff] + " · " + fmtTime(elapsedAccum) + " · " + hintsUsed + (hintsUsed === 1 ? " hint" : " hints");
+  var title = "Path Complete";
+  var detail;
+  // The all-links floor is unranked in every mode (the app's rule):
+  // the win card shows the score the play was worth, but nothing is
+  // recorded — no best, no daily result.
+  var unranked = !!G.unranked || (mode === "free" && !!G.fallback);
+  if (unranked) {
+    detail = base + " · Score " + score + " — practice board (unranked): it never touches your bests or the Daily Race.";
+  } else if (mode === "daily" && dailyDay !== null) {
+    title = "Daily #" + dailyDay + " Complete";
+    var history = loadDailyHistory();
+    var wasOfficial = !!history.results[dailyDay];
+    if (!winRecord) {
+      // Write-once per day: the first completion is the official
+      // result; replays never replace it (DailyRacePolicy).
+      history = recordingDaily(history, { day: dailyDay, elapsed: elapsedSec, score: score, hintsUsed: hintsUsed });
+      saveDailyHistory(history);
+      winRecord = history.results[dailyDay];
+    }
+    var official = winRecord;
+    if (wasOfficial && (score !== official.score || Math.abs(elapsedSec - official.elapsed) > 0.001)) {
+      // A genuinely different run on an already-recorded day: the
+      // official result stands; this one was practice. (A restored
+      // won board recomputes to the official's own numbers and
+      // takes the official line below instead.)
+      detail = "Score " + score + " this run — practice. Official: " + official.score +
+        " in " + fmtTime(official.elapsed * 1000) + " · 🔥 " + official.streak + "-day streak";
+    } else {
+      detail = "Score " + official.score + " · " + fmtTime(elapsedAccum) + " · 🔥 " + official.streak + "-day streak";
+    }
+    saveDailyProgress();
+  } else {
+    if (!winRecord) {
+      var prevBest = bestScore(G.N, G.diff);
+      var isNewBest = prevBest === null || score > prevBest;
+      if (isNewBest) lsSet("sixways.best." + G.N + "." + G.diff, String(score));
+      winRecord = { score: score, best: isNewBest ? score : prevBest, isNewBest: isNewBest };
+    }
+    detail = base + " · Score " + winRecord.score + " · Best " + winRecord.best + (winRecord.isNewBest ? " — new best!" : "");
+  }
+  document.getElementById("win-title").textContent = title;
+  document.getElementById("win-detail").textContent = detail;
+  document.getElementById("btn-again").textContent = mode === "daily" ? "Play Again" : "New Puzzle";
+  document.getElementById("btn-change-size").textContent = mode === "daily" ? "Free Play" : "Change Size";
   document.getElementById("btn-win-reopen").classList.remove("show");
   lastFocusBeforeWin = document.activeElement;
   document.getElementById("win").classList.add("show");
@@ -1231,7 +1364,7 @@ function materializePuzzle(d) {
     cells: d.cells, N: d.N,
     solution: new Map(d.solution), solByNum: d.solByNum,
     givens: new Map(d.givens), givenByNum: new Map(d.givenByNum),
-    links: new Set(d.links), side: d.side, diff: d.diffKey, fallback: !!d.fallback
+    links: new Set(d.links), side: d.side, diff: d.diffKey, fallback: !!d.fallback, unranked: !!d.unranked
   };
 }
 
@@ -1241,7 +1374,7 @@ function commitPuzzle(puzzle) {
   committedDiff = puzzle.diff;
   computeLinkNbrs(G);
   placed = new Map(); placedByNum = new Map();
-  undoStack = []; hintsUsed = 0; won = false;
+  undoStack = []; hintsUsed = 0; mistakesCharged = 0; winRecord = null; won = false;
   resetTimer();
   hideWin();
   document.getElementById("btn-new").disabled = false;
@@ -1281,6 +1414,19 @@ function onWorkerMessage(e) {
   isGenerating = false;
   if (d.ok) {
     commitPuzzle(materializePuzzle(d));
+    if (d.mode === "daily") restoreDailyProgress(d.day);
+  } else if (d.mode === "daily") {
+    // The seeded daily generator also runs on the main thread (it
+    // is fast and deterministic) — a worker failure never costs
+    // the player today's board.
+    var dp = null;
+    try { dp = generateDaily(d.day); } catch (e) { dp = null; }
+    if (dp) { commitPuzzle(dp); restoreDailyProgress(d.day); }
+    else {
+      document.getElementById("btn-new").disabled = false;
+      document.getElementById("gen-note").textContent = "That generation hiccuped — tap Daily Race to try again.";
+      setBoardStatus("error", "Couldn't create today's puzzle.");
+    }
   } else {
     var fb = buildFallbackPuzzle(desiredSide, desiredDiff);
     if (fb) commitPuzzle(fb);
@@ -1348,6 +1494,119 @@ function newGame() {
   w.postMessage({ requestId: requestId, side: side, diffKey: diff });
 }
 
+/* ============ Daily Race requests (Phase 2) ============ */
+function startDaily() {
+  dailyDay = dayNumberFor(new Date());
+  newDailyGame(dailyDay);
+}
+function newDailyGame(day) {
+  var requestId = ++genSeq;
+  if (isGenerating && genWorker) { try { genWorker.terminate(); } catch (e) {} genWorker = null; }
+  isGenerating = true;
+  var note = document.getElementById("gen-note");
+  note.textContent = "Generating today's Daily Race board…";
+  setBoardStatus("busy", "Creating today's puzzle…");
+  hideToast();
+  document.getElementById("btn-new").disabled = true;
+  if (genTimeoutId) clearTimeout(genTimeoutId);
+  // Watchdog: on timeout, generate on the main thread instead of
+  // serving any fallback — the daily board is THE board for the
+  // day, identical for everyone, and the seeded generator is fast.
+  genTimeoutId = setTimeout(function () {
+    if (requestId !== genSeq || !isGenerating) return;
+    isGenerating = false;
+    if (genWorker) { try { genWorker.terminate(); } catch (e) {} genWorker = null; }
+    var puzzle = null;
+    try { puzzle = generateDaily(day); } catch (e) { puzzle = null; }
+    if (puzzle) { commitPuzzle(puzzle); restoreDailyProgress(day); }
+    else {
+      document.getElementById("btn-new").disabled = false;
+      note.textContent = "That generation hiccuped — tap Daily Race to try again.";
+      setBoardStatus("error", "Couldn't create today's puzzle.");
+    }
+  }, 25000);
+
+  var w = ensureWorker();
+  if (!w) {
+    setTimeout(function () {
+      if (requestId !== genSeq) return;
+      if (genTimeoutId) { clearTimeout(genTimeoutId); genTimeoutId = null; }
+      isGenerating = false;
+      var puzzle = null;
+      try { puzzle = generateDaily(day); } catch (e) { puzzle = null; }
+      if (puzzle) { commitPuzzle(puzzle); restoreDailyProgress(day); }
+      else {
+        document.getElementById("btn-new").disabled = false;
+        note.textContent = "That generation hiccuped — tap Daily Race to try again.";
+        setBoardStatus("error", "Couldn't create today's puzzle.");
+      }
+    }, 40);
+    return;
+  }
+  w.postMessage({ requestId: requestId, mode: "daily", day: day });
+}
+
+// After a daily board commits: restore the day's saved progress
+// (if any) and set the entry message — official result, restored
+// board, or a fresh race with the streak on the line.
+function restoreDailyProgress(day) {
+  if (!G) return;
+  document.getElementById("gen-note").textContent +=
+    " Daily Race: the same board for everyone today.";
+  var boards = loadDailyBoards();
+  var saved = boards[day];
+  var history = loadDailyHistory();
+  var official = history.results[day] || null;
+  if (saved && saved.entries && saved.entries.length) {
+    placed = new Map(saved.entries);
+    placedByNum = new Map();
+    placed.forEach(function (num, cell) { placedByNum.set(num, cell); });
+    hintsUsed = saved.hintsUsed || 0;
+    mistakesCharged = saved.mistakesCharged || 0;
+    undoStack = [];
+    selectedNum = firstUnplacedNum();
+    selectedCell = -1;
+    won = !!saved.won;
+    resumeTimerFrom(saved.elapsedMs || 0);
+    refresh();
+    if (won) { showWin(); return; }
+    setMsg(official
+      ? "Daily #" + day + " is already in the books — this board is practice."
+      : "Welcome back — your Daily #" + day + " progress was restored.");
+    return;
+  }
+  if (official) {
+    setMsg("Daily #" + day + " complete — replaying is practice. Official score " + official.score + ".");
+  } else {
+    var streak = effectiveStreak(history, day);
+    setMsg("Daily #" + day + " — the same board for everyone today. First finish counts." +
+      (streak > 0 ? " 🔥 " + streak + "-day streak on the line." : ""));
+  }
+  refresh();
+}
+
+/* ---------- Mode switch ---------- */
+function setMode(next) {
+  if (mode === next) return;
+  mode = next;
+  document.getElementById("mode-free").setAttribute("aria-pressed", next === "free" ? "true" : "false");
+  document.getElementById("mode-daily").setAttribute("aria-pressed", next === "daily" ? "true" : "false");
+  hideWin();
+  if (next === "daily") {
+    startDaily();
+  } else {
+    dailyDay = null;
+    newGame();
+  }
+}
+document.getElementById("mode-free").addEventListener("click", function () { setMode("free"); });
+document.getElementById("mode-daily").addEventListener("click", function () { setMode("daily"); });
+// A page left open across local midnight rolls to the new race.
+document.addEventListener("visibilitychange", function () {
+  if (document.visibilityState !== "visible") return;
+  if (mode === "daily" && dailyDay !== null && dayNumberFor(new Date()) !== dailyDay) startDaily();
+});
+
 /* ============ Chrome: pill, modals, menu, tray ============ */
 var DIFF_NAMES = { easy: "Easy", medium: "Medium", hard: "Hard", expert: "Expert" };
 var DIFF_LINES = {
@@ -1367,6 +1626,10 @@ try { tutorialChoice = localStorage.getItem("sixways-tutorial"); } catch (e) { /
 var coachOn = tutorialChoice === "on";
 
 function pillLabel() {
+  if (mode === "daily" && dailyDay !== null) {
+    document.getElementById("pill-label").textContent = "Daily #" + dailyDay;
+    return;
+  }
   var side = G ? G.side : desiredSide;
   var diff = G ? G.diff : desiredDiff;
   document.getElementById("pill-label").textContent =
@@ -1446,7 +1709,13 @@ document.querySelectorAll("#set-sizes .size-card").forEach(function (b) {
 document.querySelectorAll("#set-diffs .diff-chip").forEach(function (b) {
   b.addEventListener("click", function () { pendingDiff = b.dataset.diff; syncSettingsModal(); });
 });
-document.getElementById("pill-settings").addEventListener("click", openSettings);
+document.getElementById("pill-settings").addEventListener("click", function () {
+  if (mode === "daily") {
+    setMsg("The Daily Race is the same 36-cell Medium board for everyone — switch to Free Play for other sizes and difficulties.");
+    return;
+  }
+  openSettings();
+});
 document.getElementById("btn-start").addEventListener("click", function () {
   desiredSide = pendingSize;
   desiredDiff = pendingDiff;
@@ -1458,6 +1727,7 @@ document.getElementById("btn-start").addEventListener("click", function () {
 });
 document.getElementById("btn-change-size").addEventListener("click", function () {
   hideWin();
+  if (mode === "daily") setMode("free");
   openSettings();
 });
 
@@ -1498,9 +1768,13 @@ document.getElementById("btn-info").addEventListener("click", function () {
 });
 document.getElementById("btn-new").addEventListener("click", function () {
   closeMenu();
+  if (mode === "daily") setMode("free");
   openSettings();
 });
-document.getElementById("btn-again").addEventListener("click", newGame);
+document.getElementById("btn-again").addEventListener("click", function () {
+  if (mode === "daily") { hideWin(); doRestart(); return; }
+  newGame();
+});
 
 /* ---------- Win card dismiss / reopen ---------- */
 document.getElementById("btn-win-dismiss").addEventListener("click", function () {
@@ -1666,11 +1940,13 @@ function doRestart() {
   won = false;
   hideWin();
   hintsUsed = 0;      // Restart resets the hint count…
+  mistakesCharged = 0; // …the mistake charges…
   resetTimer();       // …and the clock, cleanly.
   selectedNum = firstUnplacedNum();
   selectedCell = -1;
   setMsg("Puzzle restarted.");
   refresh();
+  saveDailyProgress();
 }
 document.getElementById("btn-restart").addEventListener("click", function () {
   closeMenu();
@@ -1702,8 +1978,17 @@ document.getElementById("btn-undo").addEventListener("click", function () {
   // Restore the pre-move hint count (undoing a hint placement gives
   // the hint back) and the pre-move clock. Because the snapshot's
   // clock was taken before the win, victory-screen time is excluded.
-  hintsUsed = (!Array.isArray(parsed) && typeof parsed.hintsUsed === "number") ? parsed.hintsUsed : hintsUsed;
-  var restoredElapsed = (!Array.isArray(parsed) && typeof parsed.elapsedMs === "number") ? parsed.elapsedMs : currentElapsedMs();
+  // DAILY RACE exception (the app's Batch 9 M2 rule): in a race the
+  // placements rewind but the clock and the counters NEVER do — a
+  // spent hint stays spent, a charged mistake stays charged, and
+  // banked race time is monotonic.
+  if (mode !== "daily") {
+    hintsUsed = (!Array.isArray(parsed) && typeof parsed.hintsUsed === "number") ? parsed.hintsUsed : hintsUsed;
+    mistakesCharged = (!Array.isArray(parsed) && typeof parsed.mistakesCharged === "number") ? parsed.mistakesCharged : mistakesCharged;
+  }
+  var restoredElapsed = mode === "daily"
+    ? currentElapsedMs()
+    : ((!Array.isArray(parsed) && typeof parsed.elapsedMs === "number") ? parsed.elapsedMs : currentElapsedMs());
 
   if (undoneNum !== null && undoneNum !== undefined && !G.givenByNum.has(undoneNum)) {
     // Preserved behaviour: the number that was just undone becomes
@@ -1756,6 +2041,7 @@ document.getElementById("btn-undo").addEventListener("click", function () {
     setMsg("");
   }
   refresh();
+  saveDailyProgress();
 });
 document.getElementById("btn-erase").addEventListener("click", function () {
   if (won) return; // victory state is locked

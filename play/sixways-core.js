@@ -458,6 +458,310 @@ function generate(side, diffKey) {
   return buildFallbackPuzzle(side, diffKey, budget);
 }
 
+/* ============ Phase 2: seeded RNG (SplitMix64) ============ */
+// Bit-exact port of the native app's SeededRNG + DeterministicRandom
+// helpers. Swift's UInt64 arithmetic is mirrored with BigInt, so a
+// seed produces the identical stream in JS as in the app — which is
+// what lets the web Daily Race deal the SAME board as iOS for a day.
+var SEED_SALT = 0x5369787761797321n; // DailyRacePolicy salt ("Sixways!")
+function makeSeededRNG(seed) {
+  var state = BigInt.asUintN(64, seed);
+  return {
+    next: function () {
+      state = BigInt.asUintN(64, state + 0x9E3779B97F4A7C15n);
+      var z = state;
+      z = BigInt.asUintN(64, (z ^ (z >> 30n)) * 0xBF58476D1CE4E5B9n);
+      z = BigInt.asUintN(64, (z ^ (z >> 27n)) * 0x94D049BB133111EBn);
+      return z ^ (z >> 31n);
+    },
+    getState: function () { return state; },
+    setState: function (s) { state = BigInt.asUintN(64, s); }
+  };
+}
+// Lemire's unbiased draw in 0..<bound, as in DeterministicRandom.swift.
+function detNextBelow(rng, bound) {
+  var b = BigInt(bound);
+  var x = rng.next();
+  var product = x * b;
+  var low = BigInt.asUintN(64, product);
+  var high = product >> 64n;
+  if (low < b) {
+    var threshold = BigInt.asUintN(64, -b) % b;
+    while (low < threshold) {
+      x = rng.next();
+      product = x * b;
+      low = BigInt.asUintN(64, product);
+      high = product >> 64n;
+    }
+  }
+  return Number(high);
+}
+function detUnitDouble(rng) {
+  return Number(rng.next() >> 11n) * Math.pow(2, -53);
+}
+function detShuffled(arr, rng) {
+  var result = arr.slice();
+  if (result.length <= 1) return result;
+  for (var i = result.length - 1; i >= 1; i--) {
+    var j = detNextBelow(rng, i + 1);
+    if (i !== j) { var t = result[i]; result[i] = result[j]; result[j] = t; }
+  }
+  return result;
+}
+
+/* ============ Phase 2: seeded Hamiltonian path ============ */
+// Port of HamiltonianPathFinder's RNG-threaded form: the start cell
+// is drawn from the outer stream, the search runs on a copy, and the
+// copy's state is written back after each attempt — one continuous
+// stream across attempts, exactly as in Swift.
+function seededHamiltonianPath(cells, rng) {
+  var N = cells.length;
+  for (var attempt = 0; attempt < 300; attempt++) {
+    var start = detNextBelow(rng, N);
+    var searchRng = makeSeededRNG(rng.getState());
+    var search = { visited: new Uint8Array(N), path: [start], nodes: 0 };
+    search.visited[start] = 1;
+    var found = seededDfs(cells, search, searchRng, start);
+    rng.setState(searchRng.getState());
+    if (found && search.path.length === N) return search.path.slice();
+  }
+  return null;
+}
+function seededDfs(cells, search, rng, cell) {
+  var N = cells.length;
+  if (search.path.length === N) return true;
+  search.nodes++;
+  if (search.nodes > 60000) return false;
+  var cands = [];
+  var nbrs = cells[cell].nbrs;
+  for (var i = 0; i < nbrs.length; i++) {
+    var nb = nbrs[i];
+    if (search.visited[nb]) continue;
+    var deg = 0;
+    var nn = cells[nb].nbrs;
+    for (var j = 0; j < nn.length; j++) if (!search.visited[nn[j]]) deg++;
+    cands.push({ cell: nb, deg: deg, rnd: detUnitDouble(rng) });
+  }
+  cands.sort(function (a, b) { return (a.deg - b.deg) || (a.rnd - b.rnd); });
+  for (var k = 0; k < cands.length; k++) {
+    var c = cands[k].cell;
+    search.visited[c] = 1; search.path.push(c);
+    if (seededDfs(cells, search, rng, c)) return true;
+    search.path.pop(); search.visited[c] = 0;
+    if (search.nodes > 60000) return false;
+  }
+  return false;
+}
+
+/* ============ Phase 2: seeded carve-and-prove ============ */
+// PuzzleGenerator.carveAndProve with the seeded stream: identical
+// structure to generate()'s carve above, with every shuffle drawn
+// from the day's RNG instead of Math.random, and an unlimited
+// budget — the daily board may depend only on deterministic node
+// caps, never on wall-clock time.
+function carveAndProveSeeded(cells, path, side, diffKey, rng, isFallback) {
+  var spec = DIFFS[diffKey];
+  var N = cells.length;
+  var cap = Math.max(150000, spec.cap - (side - 4) * 125000);
+  var budget = unlimitedBudget();
+  var solution = new Map(), solByNum = new Array(N + 1);
+  path.forEach(function (cell, i) { solution.set(cell, i + 1); solByNum[i + 1] = cell; });
+  var givens = new Map(), givenByNum = new Map();
+  function addGiven(cell) {
+    var n = solution.get(cell);
+    givens.set(cell, n); givenByNum.set(n, cell);
+  }
+  addGiven(path[0]); addGiven(path[N - 1]);
+  var midCells = detShuffled(path.slice(1, N - 1), rng);
+  var wantGivens = Math.max(2, Math.round(N * spec.givenFrac));
+  for (var i = 0; i < midCells.length && givens.size < wantGivens; i++) addGiven(midCells[i]);
+
+  var pathEdges = [];
+  for (var e = 0; e < N - 1; e++) pathEdges.push(edgeKey(path[e], path[e + 1]));
+  var links = new Set();
+  var shuffledEdges = detShuffled(pathEdges.slice(), rng);
+  var wantLinks = Math.round((N - 1) * spec.linkFrac);
+  for (var l = 0; l < shuffledEdges.length && links.size < wantLinks; l++) links.add(shuffledEdges[l]);
+
+  var proven = false;
+  var repairs = 0;
+  repairLoop: while (true) {
+    var solver = makeSolver(cells, givens, givenByNum, links);
+    var res = solver.count(2, cap, budget);
+    if (res.count === 1 && !res.capped && !res.aborted) { proven = true; break; }
+    if (res.aborted) break;
+    if (res.capped) {
+      if (repairs >= 120) break;
+      repairs++;
+      var extra = detShuffled(path.slice(1, N - 1), rng);
+      var addedC = 0;
+      for (var ei = 0; ei < extra.length && addedC < 3; ei++) {
+        if (!givens.has(extra[ei])) { addGiven(extra[ei]); addedC++; }
+      }
+      var addedLinkC = false;
+      for (var pj = 0; pj < pathEdges.length; pj++) {
+        if (!links.has(pathEdges[pj])) { links.add(pathEdges[pj]); addedLinkC = true; break; }
+      }
+      if (addedC === 0 && !addedLinkC) break;
+      continue;
+    }
+    if (res.count === 0) break;
+    if (repairs >= 120) break;
+    repairs++;
+    var alt = null;
+    [res.first, res.second].forEach(function (cand) {
+      if (!cand || alt) return;
+      for (var ci = 0; ci < N; ci++) if (cand[ci] !== solution.get(cells[ci].id)) { alt = cand; break; }
+    });
+    var fixed = false;
+    if (alt) {
+      var order = detShuffled(cells.map(function (c) { return c.id; }), rng);
+      for (var oi = 0; oi < order.length; oi++) {
+        var cell2 = order[oi];
+        if (!givens.has(cell2) && alt[cell2] !== solution.get(cell2)) { addGiven(cell2); fixed = true; break; }
+      }
+    }
+    if (!fixed) {
+      var addedL = false;
+      for (var pe = 0; pe < pathEdges.length; pe++) if (!links.has(pathEdges[pe])) { links.add(pathEdges[pe]); addedL = true; break; }
+      if (!addedL) break repairLoop;
+    }
+  }
+  if (!proven) return null;
+  return { cells: cells, N: N, solution: solution, solByNum: solByNum, givens: givens, givenByNum: givenByNum, links: links, side: side, diff: diffKey, fallback: !!isFallback };
+}
+
+/* ============ Phase 2: the Daily Race ============ */
+var DAILY_SIDE = 4;
+var DAILY_DIFF = "medium";
+// Days since the epoch (1 Dec 2026) in the player's LOCAL calendar:
+// local Y/M/D components differenced as calendar days, so DST never
+// shifts the count. Mirrors DailyRacePolicy.dayNumber.
+function dayNumberFor(date) {
+  var epoch = Date.UTC(2026, 11, 1);
+  var d = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+  return Math.round((d - epoch) / 86400000);
+}
+// DailyRacePolicy.seed(forDayNumber:): the day scrambled through
+// the SplitMix64 finalizer with the fixed salt.
+function dailySeed(day) {
+  var rng = makeSeededRNG(BigInt.asUintN(64, BigInt(day)) ^ SEED_SALT);
+  return rng.next();
+}
+// PuzzleGenerator.generateDaily: seeded pipeline, unlimited budget,
+// seeded bundled-path carve, then the by-construction floor.
+function generateDaily(day) {
+  var rng = makeSeededRNG(dailySeed(day));
+  var cells = buildGrid(DAILY_SIDE);
+  for (var attempt = 0; attempt < 6; attempt++) {
+    var path = seededHamiltonianPath(cells, rng);
+    if (!path) continue;
+    var p = carveAndProveSeeded(cells, path, DAILY_SIDE, DAILY_DIFF, rng, false);
+    if (p) return p;
+  }
+  var bundled = bundledPath(DAILY_SIDE, cells);
+  if (bundled) {
+    var carved = carveAndProveSeeded(cells, bundled, DAILY_SIDE, DAILY_DIFF, rng, true);
+    if (carved) return carved;
+    var floor = fallbackFromPath(cells, bundled, DAILY_SIDE, DAILY_DIFF);
+    floor.unranked = true; // the app's floor is unranked in every mode
+    return floor;
+  }
+  return null;
+}
+
+/* ============ Phase 2: daily history (DailyRacePolicy) ============ */
+// Pure port of DailyRacePolicy's recording rules: write-once per
+// day, streaks frozen onto each result at recording time, backfilled
+// days mint nothing. History shape:
+// { results: {day: {day, elapsed, score, hintsUsed, streak}},
+//   currentStreak, lastCompletedDay, totalCompleted, bestTime }
+function emptyDailyHistory() {
+  return { results: {}, currentStreak: 0, lastCompletedDay: null, totalCompleted: 0, bestTime: null };
+}
+function streakEndingAt(day, results) {
+  var streak = 0, d = day;
+  while (results[d] != null) { streak++; d--; }
+  return streak;
+}
+function recordingDaily(history, result) {
+  if (history.results[result.day] != null) return history;
+  var h = { results: Object.assign({}, history.results),
+            currentStreak: history.currentStreak,
+            lastCompletedDay: history.lastCompletedDay,
+            totalCompleted: history.totalCompleted,
+            bestTime: history.bestTime };
+  var stamped = { day: result.day, elapsed: result.elapsed, score: result.score,
+                  hintsUsed: result.hintsUsed, streak: 0 };
+  h.results[result.day] = stamped;
+  stamped.streak = streakEndingAt(result.day, h.results);
+  if (h.lastCompletedDay != null) {
+    var last = h.lastCompletedDay;
+    if (result.day === last + 1) h.currentStreak += 1;
+    else if (result.day > last + 1) h.currentStreak = 1;
+    h.lastCompletedDay = Math.max(last, result.day);
+  } else {
+    h.currentStreak = 1;
+    h.lastCompletedDay = result.day;
+  }
+  var backfilled = history.lastCompletedDay != null && result.day < history.lastCompletedDay;
+  if (!backfilled) {
+    h.totalCompleted += 1;
+    h.bestTime = h.bestTime == null ? result.elapsed : Math.min(h.bestTime, result.elapsed);
+  }
+  return h;
+}
+function effectiveStreak(history, today) {
+  if (history.lastCompletedDay == null || history.lastCompletedDay < today - 1) return 0;
+  return history.currentStreak;
+}
+
+/* ============ Phase 2: scoring (ScoreStore) ============ */
+// Ruled 2026-11-19 and mirrored exactly: par by size x difficulty,
+// hint -150, charged mistake -25, +2 per second under the par time
+// capped at +25% of par, no penalty past par, floor 0.
+var PAR_TABLE = {
+  36: { easy: 600, medium: 1000, hard: 1400, expert: 1800 },
+  60: { easy: 1000, medium: 1700, hard: 2400, expert: 3000 },
+  90: { easy: 1500, medium: 2500, hard: 3500, expert: 4500 }
+};
+var HINT_COST = 150, MISTAKE_COST = 25;
+function parFor(count, diffKey) {
+  var row = PAR_TABLE[count];
+  return row && row[diffKey] != null ? row[diffKey] : 1000;
+}
+function parTimeFor(count, diffKey) { return parFor(count, diffKey) * 0.24; }
+function computeScore(count, diffKey, hints, mistakes, elapsed) {
+  var par = parFor(count, diffKey);
+  var parTime = parTimeFor(count, diffKey);
+  var score = par - HINT_COST * hints - MISTAKE_COST * mistakes;
+  if (elapsed < parTime) {
+    var bonus = Math.trunc(parTime - elapsed) * 2;
+    score += Math.min(Math.floor(par / 4), bonus);
+  }
+  return Math.max(0, score);
+}
+// The app's conflict rule (GameSession.conflicts): consecutive
+// placed numbers that are not neighbours, and link endpoints whose
+// values are not consecutive. values: array of number per cell id,
+// 0 when empty (givens included). Returns a Set of cell ids.
+function conflictCells(cells, values, links) {
+  var bad = new Set();
+  var N = cells.length;
+  var cellOfNum = new Array(N + 1).fill(-1);
+  for (var i = 0; i < N; i++) if (values[i] !== 0) cellOfNum[values[i]] = i;
+  for (var n = 1; n < N; n++) {
+    var a = cellOfNum[n], b = cellOfNum[n + 1];
+    if (a >= 0 && b >= 0 && cells[a].nbrs.indexOf(b) === -1) { bad.add(a); bad.add(b); }
+  }
+  links.forEach(function (ek) {
+    var parts = ek.split("-"), x = +parts[0], y = +parts[1];
+    var va = values[x], vb = values[y];
+    if (va !== 0 && vb !== 0 && Math.abs(va - vb) !== 1) { bad.add(x); bad.add(y); }
+  });
+  return bad;
+}
+
 /* ============ Module export (browser global + CommonJS) ============ */
 var SixwaysCore = {
   DIRS: DIRS,
@@ -473,6 +777,24 @@ var SixwaysCore = {
   bundledPath: bundledPath,
   fallbackFromPath: fallbackFromPath,
   buildFallbackPuzzle: buildFallbackPuzzle,
-  generate: generate
+  generate: generate,
+  makeSeededRNG: makeSeededRNG,
+  detNextBelow: detNextBelow,
+  detUnitDouble: detUnitDouble,
+  detShuffled: detShuffled,
+  seededHamiltonianPath: seededHamiltonianPath,
+  carveAndProveSeeded: carveAndProveSeeded,
+  dailySeed: dailySeed,
+  dayNumberFor: dayNumberFor,
+  generateDaily: generateDaily,
+  emptyDailyHistory: emptyDailyHistory,
+  streakEndingAt: streakEndingAt,
+  recordingDaily: recordingDaily,
+  effectiveStreak: effectiveStreak,
+  PAR_TABLE: PAR_TABLE,
+  parFor: parFor,
+  parTimeFor: parTimeFor,
+  computeScore: computeScore,
+  conflictCells: conflictCells
 };
 if (typeof module !== "undefined" && module.exports) module.exports = SixwaysCore;
