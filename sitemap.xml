@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://sixways.app/</loc>
+    <lastmod>2026-11-20</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sixways.app/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sixways.app/fr/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sixways.app/"/>
+  </url>
+  <url>
+    <loc>https://sixways.app/fr/</loc>
+    <lastmod>2026-11-20</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sixways.app/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sixways.app/fr/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sixways.app/"/>
+  </url>
+  <url>
+    <loc>https://sixways.app/play/</loc>
+    <lastmod>2026-11-20</lastmod>
+  </url>
+  <url>
+    <loc>https://sixways.app/support.html</loc>
+    <lastmod>2026-11-20</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sixways.app/support.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sixways.app/fr/support.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sixways.app/support.html"/>
+  </url>
+  <url>
+    <loc>https://sixways.app/fr/support.html</loc>
+    <lastmod>2026-11-20</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sixways.app/support.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sixways.app/fr/support.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sixways.app/support.html"/>
+  </url>
+  <url>
+    <loc>https://sixways.app/privacy.html</loc>
+    <lastmod>2026-11-20</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sixways.app/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sixways.app/fr/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sixways.app/privacy.html"/>
+  </url>
+  <url>
+    <loc>https://sixways.app/fr/privacy.html</loc>
+    <lastmod>2026-11-20</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sixways.app/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sixways.app/fr/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sixways.app/privacy.html"/>
+  </url>
+</urlset>
