@@ -185,6 +185,9 @@ svg#board {
   display: block; width: 100%; height: 100%; max-width: 560px; margin: 0 auto;
   touch-action: manipulation;
 }
+/* No double-tap zoom on controls (iOS Safari zooms on rapid repeat taps,
+   e.g. Undo); pinch zoom stays available. */
+button, a, input, select, label, .chip { touch-action: manipulation; }
 .hex { fill: var(--hex-empty); stroke: var(--hex-stroke); stroke-width: 1.2; cursor: pointer; }
 .hex.given { fill: var(--hex-given); }
 .hex.filled { fill: var(--hex-filled); }
