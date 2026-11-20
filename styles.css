@@ -45,8 +45,8 @@ header {
 /* Header brand carries more weight: a bigger mark, and the mark's faded
    hexes strengthened so the cluster reads at header size. The footer
    brand keeps the small, quiet treatment. */
-header .brand { font-size: 1.55rem; }
-header .brand svg { width: 39px; height: 39px; }
+header .brand { font-size: 1.68rem; }
+header .brand svg { width: 42px; height: 42px; }
 header .brand svg polygon:nth-of-type(3),
 header .brand svg polygon:nth-of-type(4) { opacity: .8; }
 header .brand svg polygon:nth-of-type(5),
@@ -76,7 +76,18 @@ footer p { margin: 0; margin-left: auto; color: var(--ink-soft); font-size: 0.9r
 .board { max-width: 372px; margin: 0 auto 24px; }
 .board svg { width: 100%; height: auto; display: block; }
 .soon { font-weight: 700; margin: 0 0 8px; }
-.promises { color: var(--ink-soft); font-size: 0.93rem; margin: 0; }
+/* Trust strip: the four promises as small pill badges, not a
+   plain line of text — the "·" separators become the chips'
+   separation. Quiet in scale: a supporting strip under the CTA. */
+.promises {
+  display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+  margin: 0; padding: 0;
+}
+.promises span {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 999px; padding: 5px 13px;
+  color: var(--ink-soft); font-size: 0.88rem; font-weight: 600; line-height: 1.35;
+}
 .play-cta { margin: 16px 0; }
 .play-button {
   display: inline-block; background: var(--teal); color: var(--surface);
@@ -93,8 +104,8 @@ header nav a.nav-play {
   background: var(--teal); color: var(--surface);
   font-family: ui-rounded, -apple-system, BlinkMacSystemFont, "SF Pro Rounded",
     "Segoe UI", Roboto, sans-serif;
-  font-weight: 700; font-size: 0.95rem; letter-spacing: 0.01em;
-  padding: 8px 20px; border-radius: 999px;
+  font-weight: 700; font-size: 1rem; letter-spacing: 0.01em;
+  padding: 9px 22px; border-radius: 999px;
   transition: background-color .18s ease;
 }
 header nav a.nav-play:hover { background: #0A4E54; color: var(--surface); }
@@ -138,7 +149,22 @@ section p strong { color: var(--ink); }
 .faq summary::after { content: "+"; color: var(--orange); font-size: 1.25rem; font-weight: 800; }
 .faq details[open ] summary::after { content: "–"; }
 .faq details p { margin: 0 0 15px; }
-.faq .more { margin-top: 16px; }
+/* "More answers" is a card in its own right, not filler parked in
+   the grid's spare cell: the FAQ cards' geometry, a soft teal tint
+   and a dashed teal edge, with the support link as the point of
+   the card. */
+.faq .more {
+  background: color-mix(in srgb, var(--teal) 6%, var(--surface));
+  border: 1px dashed color-mix(in srgb, var(--teal) 45%, var(--border));
+  border-radius: 16px; padding: 16px 20px; margin: 0;
+  display: flex; align-items: center;
+}
+.faq .more a {
+  color: var(--teal); font-weight: 800;
+  text-decoration: underline; text-underline-offset: 3px;
+}
+.faq .more a::after { content: " →"; }
+.faq .more a:hover { color: var(--orange-dark); }
 
 /* prose pages (support / privacy) */
 .prose h1 { font-size: clamp(1.9rem, 5vw, 2.5rem); font-weight: 800; margin: 8px 0 14px; }
@@ -155,6 +181,18 @@ section p strong { color: var(--ink); }
    so the page fills the screen instead of floating in it. */
 @media (min-width: 768px) {
   :root { --sp-section: 30px; }
+  /* Header cushion: ~18px more air above the brand row at tablet
+     sizes, so it breathes below the browser toolbar instead of
+     hugging it. The play page header gets the identical cushion. */
+  header { padding-top: 40px; }
+  /* Header pair steps up a notch at tablet sizes (Jordan,
+     2026-11-20): logo mark 46px, wordmark 1.8rem, and the Play
+     pill scaled with them so the pair stays balanced. The base
+     sizes above carry a smaller step so the phone header doesn't
+     crowd. */
+  header .brand { font-size: 1.8rem; }
+  header .brand svg { width: 46px; height: 46px; }
+  header nav a.nav-play { font-size: 1.1rem; padding: 11px 26px; }
   header, main, footer { max-width: min(1120px, 94vw); }
   .board { max-width: 470px; }
   .prose { max-width: 780px; }
@@ -173,7 +211,7 @@ section p strong { color: var(--ink); }
   }
   .hero .soon { grid-column: 1; grid-row: 3; }
   .hero .play-cta { grid-column: 1; grid-row: 4; }
-  .hero .promises { grid-column: 1; grid-row: 5; }
+  .hero .promises { grid-column: 1; grid-row: 5; justify-content: flex-start; }
 }
 
 /* ---------- Section cards: steps, pricing, FAQ ----------
@@ -214,6 +252,24 @@ section p strong { color: var(--ink); }
   background: color-mix(in srgb, var(--teal) 5%, var(--surface));
 }
 .boards li:nth-child(2) strong { color: var(--teal); }
+/* Pricing footnote: the two lines that used to trail the cards as
+   plain paragraphs now close the section as one designed unit — a
+   soft full-width strip. The "only purchase" line sits centred and
+   quiet with a small checked hex; the difficulties line is its
+   caption. Copy verbatim, presentation only. */
+.pricing-note {
+  margin-top: 16px; text-align: center;
+  background: color-mix(in srgb, var(--parchment) 38%, var(--surface));
+  border: 1px solid var(--border); border-radius: 16px;
+  padding: 18px 24px 16px;
+}
+.pricing-note p { margin: 0; }
+.pricing-note .note-main {
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  color: var(--ink); font-weight: 600; font-size: 0.99rem;
+}
+.pricing-note .note-mark { flex: none; display: block; }
+.pricing-note .note-sub { color: var(--ink-soft); font-size: 0.92rem; margin-top: 5px; }
 .faq details {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: 16px; padding: 2px 20px; margin-bottom: 14px;
@@ -232,8 +288,8 @@ section p strong { color: var(--ink); }
   section.faq { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 24px; }
   .faq h2 { grid-column: 1 / -1; }
   /* Three cards in a two-column grid leave one cell over: the
-     "More answers" line takes that cell, vertically centred, so the
+     "More answers" card takes that cell at full row height, so the
      section closes evenly instead of trailing under a hole. */
-  .faq .more { grid-column: 2; align-self: center; margin: 0; }
+  .faq .more { grid-column: 2; align-self: stretch; margin: 0; }
   .faq details { margin-bottom: 0; }
 }

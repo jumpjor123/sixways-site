@@ -247,18 +247,21 @@ text.cellnum.bad { fill: var(--error); }
 .hintpulse { fill: none; stroke: var(--orange); stroke-width: 2.5; pointer-events: none; }
 
 .zoom-pill {
-  position: absolute; top: 16px; right: 16px; z-index: 5;
+  /* Compact corner overlay (Jordan, 2026-11-20): small − / % / +
+     grouped at the board's top-right corner on a semi-transparent
+     surface, so it never covers the play area. */
+  position: absolute; top: 10px; right: 10px; z-index: 5;
   display: none; align-items: center; gap: 2px;
-  background: color-mix(in srgb, var(--surface) 92%, transparent);
-  border: 1px solid var(--border); border-radius: 12px; padding: 2px;
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  border: 1px solid var(--border); border-radius: 10px; padding: 2px;
 }
 .zoom-pill.show { display: inline-flex; }
 .zoom-pill button {
   border: 0; background: transparent; color: var(--ink); cursor: pointer;
-  min-width: 44px; min-height: 44px; font-size: 15px; font-weight: 700; border-radius: 9px;
+  min-width: 32px; min-height: 32px; font-size: 13px; font-weight: 700; border-radius: 8px;
 }
 .zoom-pill button:disabled { color: var(--ink-soft); cursor: default; }
-.zoom-pill .zoom-pct { min-width: 52px; font-size: 13px; font-variant-numeric: tabular-nums; }
+.zoom-pill .zoom-pct { min-width: 42px; font-size: 12px; font-variant-numeric: tabular-nums; }
 
 .board-status {
   position: absolute; top: 14px; left: 50%; transform: translateX(-50%); z-index: 6;
@@ -381,6 +384,7 @@ text.cellnum.bad { fill: var(--error); }
   border: 1px solid var(--border); border-radius: 999px;
   font-size: 12px; font-weight: 600; padding: 3px 8px; min-height: 28px; cursor: pointer; flex: none;
 }
+.range-pill.active { background: var(--teal); border-color: var(--teal); color: var(--surface); }
 /* All 36 keys are always visible — the pad never scrolls.
    Phones: 9 across x 4 rows. Wider screens: 12 across x 3 rows. */
 .pad-scroll { position: relative; }
@@ -523,6 +527,22 @@ text.cellnum.bad { fill: var(--error); }
    it, so zoom (inline % sizes from applyZoom) is unaffected. */
 @media (min-width: 768px) {
   header, .game, footer { max-width: 1080px; padding: 0 28px; }
+  /* Header cushion (Jordan, 2026-11-20): +18px above the brand row
+     at tablet sizes so it breathes below the browser toolbar. The
+     header is flex:none in the 100dvh column, so the game area
+     gives up the height — absorbed by the layout's slack (the
+     centred spacers); the drawn board is width-limited at these
+     sizes and does not shrink (verified 1194x834 and 834x1194).
+     The homepage header carries the identical cushion. */
+  header { padding-top: 26px; }
+  /* Bottom cushion (Jordan, 2026-11-20): matching breathing room
+     below the game area in both orientations, so the board/pad
+     never sits flush against the screen's bottom edge. Absorbed
+     by the layout's slack like the header cushion; the drawn
+     board is width-limited and does not shrink (verified at
+     1194x834 and 834x1194). The landscape block below re-asserts
+     it after its own padding shorthand. */
+  .game { padding-bottom: 18px; }
   svg#board { max-width: none; }
   .win-card { max-width: 560px; }
   .hud-stat { font-size: 15px; }
@@ -533,6 +553,9 @@ text.cellnum.bad { fill: var(--error); }
 }
 @media (min-width: 1024px) and (orientation: landscape) {
   header, .game, footer { max-width: 1460px; padding: 0 32px; }
+  /* The shorthand above would flatten the cushions — re-assert. */
+  header { padding-top: 26px; }
+  .game { padding-bottom: 18px; }
   .game {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 412px;
@@ -568,7 +591,13 @@ text.cellnum.bad { fill: var(--error); }
   .pad-tray { grid-column: 2; grid-row: 6; }
   .game:not(:has(> #tutorial-invite.show, > #coach.show)) .pad-tray { grid-row: 5; }
   #pad { grid-template-columns: repeat(6, 1fr); gap: 8px; }
-  .chip { min-height: 50px; }
+  /* Big boards in landscape (range pills present = N > 36): 10
+     across, so the pad is 6 rows at 60 and 9 rows at 90 instead of
+     10/15 — the column can then fit the board's height exactly,
+     with the precise key height measured and set by
+     syncLandscapeLayout() through --chipH. */
+  .game:has(#range-pills > :nth-child(2)) #pad { grid-template-columns: repeat(10, 1fr); }
+  .chip { height: var(--chipH, 50px); min-height: var(--chipH, 50px); }
   .action-btn { min-height: 52px; }
 }
 
@@ -1558,7 +1587,12 @@ function onCellKey(ev, cell) {
 function buildPad() {
   var padEl = document.getElementById("pad");
   padEl.innerHTML = "";
-  for (var n = 1; n <= G.N; n++) {
+  // Phone pagination (see syncPadRange): at <768px on 60/90 boards
+  // only the current 30-number range is rendered, so the pad stays
+  // four rows tall and the board keeps its share of the screen.
+  var lo = 1, hi = G.N;
+  if (padPaginated()) { lo = padRangeStart; hi = Math.min(lo + 29, G.N); }
+  for (var n = lo; n <= hi; n++) {
     var b = document.createElement("button");
     b.type = "button";
     b.className = "chip" + (G.givenByNum.has(n) ? " given" : "");
@@ -1624,6 +1658,7 @@ function neighbourHints() {
 
 function refresh() {
   if (!G) return;
+  syncPadRange();
   var bad = showErrors ? conflicts() : new Set();
   var hints = neighbourHints();
   G.cells.forEach(function (c) {
@@ -1704,6 +1739,7 @@ function refresh() {
   document.getElementById("btn-erase").disabled = !(selectedCell >= 0 && placed.has(selectedCell) && !won);
   document.getElementById("btn-hint").disabled = won;
   syncChrome();
+  syncLandscapeLayout();
   saveFreeProgress();
 }
 
@@ -2501,6 +2537,7 @@ function syncChrome() {
           var b = document.createElement("button");
           b.type = "button";
           b.className = "range-pill";
+          b.dataset.start = s;
           b.textContent = s + "–" + end;
           b.setAttribute("aria-label", t("rangeAria", { s: s, e: end }));
           b.addEventListener("click", function () {
@@ -2515,6 +2552,18 @@ function syncChrome() {
         })(start);
       }
     }
+  }
+  // Range pills carry their state: on the phone (paginated pad)
+  // the pill of the rendered range is lit; elsewhere the pill of
+  // the selected number's range.
+  var pillEls = document.getElementById("range-pills").children;
+  for (var pi = 0; pi < pillEls.length; pi++) {
+    var ps = +pillEls[pi].dataset.start;
+    var pActive = padPaginated()
+      ? ps === padRangeStart
+      : (selectedNum >= ps && selectedNum <= Math.min(ps + 29, G.N));
+    pillEls[pi].classList.toggle("active", pActive);
+    pillEls[pi].setAttribute("aria-pressed", pActive ? "true" : "false");
   }
   var coach = document.getElementById("coach");
   if (coachOn && !coachDismissed && !won && placed.size < 2) {
@@ -2670,6 +2719,7 @@ function applyZoom() {
   document.getElementById("zoom-level").textContent = Math.round(zoomLevel * 100) + "%";
   document.getElementById("btn-zoom-out").disabled = zoomLevel <= 1;
   document.getElementById("zoom-pill").classList.toggle("show", zoomLevel > 1 || (G && G.N >= 90));
+  syncLandscapeLayout();
 }
 document.getElementById("btn-zoom-in").addEventListener("click", function () {
   zoomLevel = Math.min(2.5, zoomLevel + 0.25); applyZoom();
@@ -2696,6 +2746,127 @@ document.addEventListener("keydown", function (ev) {
     eraseCell(selectedCell);
   }
 });
+
+/* ---------- Responsive pad + landscape column alignment ----------
+   Phone (<768px) on 60/90 boards: the pad PAGINATES by the same
+   30-number ranges as the range pills — only one range renders, so
+   the pad stays four rows tall, the board keeps its hero share and
+   the screen never scrolls. The rendered range follows the
+   selected number (steppers, range pills, placements) via
+   syncPadRange() at the top of refresh(). Wider screens always
+   render the full pad; the range pills stay jump shortcuts there.
+
+   Landscape (>=1024px): the right control column spans EXACTLY
+   the drawn hex field's height — toolbar top flush with the top
+   of the hexagons, pad bottom flush with the bottom of the
+   hexagons (Jordan, 2026-11-20). The field's position is measured
+   from the live SVG geometry, the two grid spacer rows are set to
+   the measured offsets, and the pad key height (--chipH) absorbs
+   the rest, so 36 keeps its large keys and 60/90 compress to fit
+   instead of overflowing the screen. */
+var padRangeStart = 1, padModeWas = false;
+function padPaginated() {
+  return !!(G && G.N > 36 && window.matchMedia("(max-width: 767px)").matches);
+}
+function rangeStartOf(n) {
+  var c = Math.min(Math.max(n, 1), G.N);
+  return Math.floor((c - 1) / 30) * 30 + 1;
+}
+function syncPadRange() {
+  if (!padPaginated()) { padModeWas = false; return; }
+  padModeWas = true;
+  var rs = rangeStartOf(selectedNum);
+  if (rs !== padRangeStart) { padRangeStart = rs; buildPad(); }
+}
+
+var LANDSCAPE_MQ = "(min-width: 1024px) and (orientation: landscape)";
+function syncLandscapeLayout() {
+  var game = document.querySelector(".game");
+  if (!game) return;
+  var tray = document.querySelector(".pad-tray");
+  if (!window.matchMedia(LANDSCAPE_MQ).matches || !G || !G.coords || zoomLevel !== 1) {
+    if (game.style.gridTemplateRows) game.style.gridTemplateRows = "";
+    if (tray) tray.style.removeProperty("--chipH");
+    return;
+  }
+  var svgEl = document.getElementById("board");
+  var vb = svgEl.viewBox && svgEl.viewBox.baseVal;
+  if (!vb || !vb.width) return;
+  // Two passes: the first applies an approximate key height and
+  // template (a freshly built pad still stands at the default key
+  // height, which inflates the grid and displaces the measured
+  // field); the second measures the settled layout and corrects.
+  for (var pass = 0; pass < 2; pass++) syncLandscapePass(svgEl, vb);
+}
+
+function syncLandscapePass(svgEl, vb) {
+  var game = document.querySelector(".game");
+  var tray = document.querySelector(".pad-tray");
+  var sr = svgEl.getBoundingClientRect();
+  if (!sr.width) return;
+  // Drawn hex field, from the live geometry: hex centres span
+  // G.coords; each hex extends 28.2 units vertically (30 x 0.94)
+  // from its centre. The SVG letterboxes the viewBox (meet), so
+  // the field's screen position follows from the viewBox scale.
+  var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  G.coords.forEach(function (p) {
+    if (p.x < minX) minX = p.x;
+    if (p.x > maxX) maxX = p.x;
+    if (p.y < minY) minY = p.y;
+    if (p.y > maxY) maxY = p.y;
+  });
+  var scale = Math.min(sr.width / vb.width, sr.height / vb.height);
+  var fieldH = ((maxY - minY) + 56.4) * scale;
+  var fieldTop = sr.top + (sr.height - vb.height * scale) / 2 + ((minY - 28.2) - vb.y) * scale;
+  var fieldBottom = fieldTop + fieldH;
+
+  var GAP = 18; // the landscape grid's row-gap
+  var gameRect = game.getBoundingClientRect();
+  var gcs = getComputedStyle(game);
+  var contentTop = gameRect.top + (parseFloat(gcs.paddingTop) || 0);
+  var contentBottom = gameRect.bottom - (parseFloat(gcs.paddingBottom) || 0);
+
+  var invite = document.getElementById("tutorial-invite");
+  var coach = document.getElementById("coach");
+  var midEl = invite.classList.contains("show") ? invite
+    : (coach.classList.contains("show") ? coach : null);
+  var padEl = document.getElementById("pad");
+  var nonPad = document.querySelector(".toolbar").offsetHeight
+    + document.querySelector(".hud").offsetHeight
+    + document.querySelector(".actions").offsetHeight
+    + (midEl ? midEl.offsetHeight : 0);
+  var trayNonGrid = tray.offsetHeight - padEl.offsetHeight;
+  var nRows = 4 + (midEl ? 1 : 0);
+  var padGridH = fieldH - nonPad - GAP * (nRows - 1) - trayNonGrid;
+  var cols = (getComputedStyle(padEl).gridTemplateColumns || "").split(" ").filter(Boolean).length || 6;
+  var padGap = parseFloat(getComputedStyle(padEl).rowGap) || 8;
+  var padRows = Math.max(1, Math.ceil(padEl.children.length / cols));
+  var chipH = (padGridH - (padRows - 1) * padGap) / padRows;
+  chipH = Math.max(24, Math.min(64, chipH));
+  tray.style.setProperty("--chipH", chipH.toFixed(1) + "px");
+
+  var topSpacer = Math.max(0, Math.round(fieldTop - contentTop - GAP));
+  var bottomSpacer = Math.max(0, Math.round(contentBottom - fieldBottom - GAP));
+  var tpl = topSpacer + "px" + (midEl ? " auto auto auto auto auto " : " auto auto auto auto ") + bottomSpacer + "px";
+  if (game.style.gridTemplateRows !== tpl) game.style.gridTemplateRows = tpl;
+}
+
+var layoutResizeTimer = null;
+window.addEventListener("resize", function () {
+  if (layoutResizeTimer) clearTimeout(layoutResizeTimer);
+  layoutResizeTimer = setTimeout(function () {
+    if (!G) return;
+    if (padPaginated() !== padModeWas) buildPad();
+    refresh();
+  }, 120);
+});
+if (window.MutationObserver) {
+  var layoutObserver = new MutationObserver(function () { syncLandscapeLayout(); });
+  ["tutorial-invite", "coach"].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) layoutObserver.observe(el, { attributes: true, attributeFilter: ["class"] });
+  });
+}
 
 applyLanguage();
 applyZoom();
