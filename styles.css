@@ -64,6 +64,9 @@ footer {
 }
 footer .brand { font-size: 1.05rem; }
 footer p { margin: 0; margin-left: auto; color: var(--ink-soft); font-size: 0.9rem; }
+/* Footer trust line: the same four promises as the hero's, one
+   dot-separated line, never broken across lines. */
+footer .trust { white-space: nowrap; font-size: 0.78rem; letter-spacing: -0.01em; }
 
 /* hero */
 .hero { text-align: center; padding: 16px 0 var(--sp-section); }
@@ -76,17 +79,14 @@ footer p { margin: 0; margin-left: auto; color: var(--ink-soft); font-size: 0.9r
 .board { max-width: 372px; margin: 0 auto 24px; }
 .board svg { width: 100%; height: auto; display: block; }
 .soon { font-weight: 700; margin: 0 0 8px; }
-/* Trust strip: the four promises as small pill badges, not a
-   plain line of text — the "·" separators become the chips'
-   separation. Quiet in scale: a supporting strip under the CTA. */
+/* Trust strip: the four promises as ONE dot-separated line —
+   the same format as the footer's trust line — sized to hold a
+   single line at phone widths (360px included) in both languages,
+   stepping up once there is room. Never wraps. */
 .promises {
-  display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
-  margin: 0; padding: 0;
-}
-.promises span {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 999px; padding: 5px 13px;
-  color: var(--ink-soft); font-size: 0.88rem; font-weight: 600; line-height: 1.35;
+  margin: 0; padding: 0; white-space: nowrap;
+  color: var(--ink-soft); font-size: 0.76rem; font-weight: 600;
+  letter-spacing: -0.015em; line-height: 1.35;
 }
 .play-cta { margin: 16px 0; }
 .play-button {
@@ -197,6 +197,9 @@ section p strong { color: var(--ink); }
   .board { max-width: 470px; }
   .prose { max-width: 780px; }
   .hero { padding-top: 24px; }
+  /* Room to spare at tablet widths: the trust line steps up. */
+  .promises { font-size: 0.95rem; letter-spacing: 0; }
+  footer .trust { font-size: 0.85rem; letter-spacing: 0; }
 }
 @media (min-width: 1024px) and (orientation: landscape) {
   .hero {
@@ -222,17 +225,34 @@ section p strong { color: var(--ink); }
 .steps { display: grid; gap: 16px; }
 .steps li {
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: 16px; padding: 20px; margin-bottom: 0; align-items: flex-start;
+  border-radius: 16px; margin-bottom: 0; align-items: flex-start;
+  /* The badge is taken out of the flow (below), so the text starts
+     after badge + gap: 20px padding + 38px badge + 14px gap. */
+  position: relative; padding: 20px 20px 20px 72px;
 }
 .steps li span {
-  flex: none; display: inline-flex; align-items: center; justify-content: center;
+  display: inline-flex; align-items: center; justify-content: center;
   width: 38px; height: 43px; background: var(--teal); color: var(--surface);
   font-size: 1.05rem; font-weight: 800; line-height: 1;
-  /* Optical centring: the 43px badge centres on the first text line
-     (27px line box) instead of sharing its top edge. */
-  margin-top: -8px;
+  /* One alignment rule for every card, however the text wraps:
+     the badge's centre sits on the first text line's centre —
+     top = 20px card padding + (27.2px line box − 43px badge) / 2.
+     Absolute positioning keeps the rule identical in all three
+     cards; no flex-item margin is involved. */
+  position: absolute; left: 20px; top: 12px;
   clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
 }
+/* Daily Race line: a card of the same family as the step cards —
+   soft surface, hairline edge, the badge's hexagon carrying a
+   clock for "against the clock" — so the section has no loose
+   text under the steps. */
+.daily-note {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 20px;
+}
+.daily-note .daily-mark { flex: none; display: block; }
+.daily-note p { margin: 0; }
 .boards { display: grid; gap: 16px; }
 .boards li {
   flex-direction: column; align-items: flex-start; gap: 8px;
