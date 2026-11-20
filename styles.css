@@ -31,7 +31,7 @@ header, main, footer { max-width: 680px; margin: 0 auto; padding: 0 22px; }
 /* header + footer */
 header {
   display: flex; align-items: center; justify-content: space-between;
-  padding-top: 22px; padding-bottom: 22px;
+  padding-top: 22px; padding-bottom: 10px;
 }
 .brand {
   display: flex; align-items: center; gap: 9px;
@@ -52,7 +52,7 @@ footer .brand { font-size: 1.05rem; }
 footer p { margin: 0; margin-left: auto; color: var(--ink-soft); font-size: 0.9rem; }
 
 /* hero */
-.hero { text-align: center; padding: 34px 0 10px; }
+.hero { text-align: center; padding: 8px 0 10px; }
 .hero h1 {
   font-size: clamp(2.1rem, 6.5vw, 3.2rem); line-height: 1.08; font-weight: 800;
   letter-spacing: -0.01em; margin: 0 0 18px;
@@ -73,6 +73,18 @@ footer p { margin: 0; margin-left: auto; color: var(--ink-soft); font-size: 0.9r
   transition: background-color .18s ease, transform .18s ease;
 }
 .play-button:hover { background: #0A4E54; transform: translateY(-1px); }
+/* Header Play pill: the big button's colours, header size. Support and
+   Privacy live in the footer; the top bar carries the brand and Play. */
+header nav a.nav-play {
+  background: var(--teal); color: var(--surface);
+  font-family: ui-rounded, -apple-system, BlinkMacSystemFont, "SF Pro Rounded",
+    "Segoe UI", Roboto, sans-serif;
+  font-weight: 700; font-size: 0.95rem; letter-spacing: 0.01em;
+  padding: 8px 20px; border-radius: 999px;
+  transition: background-color .18s ease;
+}
+header nav a.nav-play:hover { background: #0A4E54; color: var(--surface); }
+.nav-play .tri { color: #F2A56B; font-size: 0.8em; margin-right: 8px; vertical-align: 2px; }
 .play-button .tri { color: #F2A56B; font-size: 0.8em; margin-right: 10px; vertical-align: 2px; }
 
 /* sections */
