@@ -849,7 +849,8 @@ function saveFreeProgress() {
     entries: Array.from(placed.entries()),
     hintsUsed: hintsUsed,
     mistakesCharged: mistakesCharged,
-    elapsedMs: currentElapsedMs()
+    elapsedMs: currentElapsedMs(),
+    undoStack: undoStack.slice()
   }));
 }
 function loadFreeSession() {
@@ -872,12 +873,18 @@ function restoreFreeSession() {
   placed.forEach(function (num, cell) { placedByNum.set(num, cell); });
   hintsUsed = s.hintsUsed || 0;
   mistakesCharged = s.mistakesCharged || 0;
-  undoStack = [];
+  undoStack = (s.undoStack || []).slice();
   selectedNum = firstUnplacedNum();
   selectedCell = -1;
   resumeTimerFrom(s.elapsedMs || 0);
   refresh();
-  setMsg("Welcome back — your game was restored.");
+  // The welcome-back note is a moment, not a fixture: it fades after a
+  // few seconds, and only if nothing newer has replaced it.
+  var restoredMsg = "Welcome back — your game was restored.";
+  setMsg(restoredMsg);
+  setTimeout(function () {
+    if (document.getElementById("st-msg").textContent === restoredMsg) setMsg("");
+  }, 4000);
   return true;
 }
 
