@@ -1,0 +1,1710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<link rel="icon" href="data:,">
+<title>Play Sixways — free demo</title>
+<meta name="description" content="Play the free Sixways demo in your browser: the 36-cell hex number-path puzzle with all four difficulties. No ads, no tracking, no accounts.">
+<style>
+/* Sixways play page — the site's minimal brand (warm cream, deep teal,
+   burnt orange; whitespace and hairlines, no cards, no shadows) over the
+   original web build's game chrome. */
+:root {
+  --canvas: #F3EEE4;
+  --surface: #FCF9F3;
+  --surface-elevated: #E8E1D3;
+  --parchment: #E4DAC6;
+  --border: #D8D0BE;
+  --ink: #0B2E33;
+  --ink-soft: #4A6668;
+  --orange: #CC520E;
+  --orange-dark: #A84209;
+  --teal: #0E636B;
+  --accent: #CC520E;
+  --accent-ink: #FFFDF9;
+  --accent-text: #A84209;
+  --hex-empty: #FCF9F3;
+  --hex-given: #E4DAC6;
+  --hex-candidate: rgba(204, 82, 14, 0.14);
+  --hex-stroke: #BFB5A0;
+  --link: #CC520E;
+  --link-ok: #0E636B;
+  --error: #C42E22;
+  --error-surface: #FCE5E2;
+  --scrim: rgba(11, 46, 51, 0.42);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--canvas); color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 17px; line-height: 1.6; -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; }
+button, [role="button"], select, summary, input:not([type="checkbox"], [type="radio"]) { min-height: 2rem; }
+:focus-visible { outline: 3px solid var(--teal); outline-offset: 2px; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ---------- Site header + footer (mirrors sixways.app) ---------- */
+header, .game, footer { max-width: 760px; margin: 0 auto; padding: 0 22px; }
+header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 22px; padding-bottom: 22px;
+}
+.brand {
+  display: flex; align-items: center; gap: 9px;
+  color: var(--ink); text-decoration: none; font-weight: 800; font-size: 1.2rem;
+  font-family: ui-rounded, -apple-system, BlinkMacSystemFont, "SF Pro Rounded",
+    "Segoe UI", Roboto, sans-serif;
+}
+.brand svg { display: block; }
+header nav, footer nav { display: flex; gap: 22px; }
+header nav a, footer nav a {
+  color: var(--ink); text-decoration: none; font-weight: 600; font-size: 0.95rem;
+}
+header nav a:hover, footer nav a:hover { color: var(--orange-dark); }
+footer {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px 26px;
+  border-top: 1px solid var(--border); margin-top: 30px;
+  padding-top: 24px; padding-bottom: 34px;
+}
+footer .brand { font-size: 1.05rem; }
+footer p { margin: 0; margin-left: auto; color: var(--ink-soft); font-size: 0.9rem; }
+
+/* ---------- Game column ---------- */
+.game { display: flex; flex-direction: column; gap: 10px; }
+
+/* Toolbar (settings pill, how-to, more menu) */
+.toolbar { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.toolbar .spacer { flex: 1; }
+.pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--border); border-radius: 999px;
+  font-size: 14px; font-weight: 600; padding: 6px 12px; min-height: 44px; cursor: pointer;
+}
+.pill .chev { font-size: 10px; font-weight: 800; }
+.icon-btn {
+  position: relative; width: 44px; height: 44px; min-height: 44px; border-radius: 50%;
+  border: 0; background: transparent; color: var(--ink);
+  font-size: 19px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+}
+.icon-btn:hover { background: var(--surface-elevated); }
+.icon-btn .dot {
+  position: absolute; top: 7px; right: 7px; width: 9px; height: 9px;
+  border-radius: 50%; background: var(--orange);
+}
+.menu-wrap { position: relative; }
+.menu {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 40;
+  min-width: 232px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 6px;
+}
+.menu[hidden] { display: none; }
+.menu-row {
+  display: flex; align-items: center; gap: 9px; width: 100%;
+  background: transparent; border: 0; border-radius: 8px;
+  color: var(--ink); font-size: 14px; font-weight: 600;
+  padding: 9px 10px; min-height: 40px; cursor: pointer; text-align: left;
+}
+.menu-row:hover:not(:disabled) { background: var(--surface-elevated); }
+.menu-row:disabled { color: var(--ink-soft); cursor: default; }
+.menu-row.danger { color: var(--error); }
+.menu-row .mi { width: 20px; text-align: center; flex: none; }
+.menu hr { border: 0; border-top: 1px solid var(--border); margin: 5px 4px; }
+.menu .toggle { cursor: pointer; }
+.menu .toggle input { width: 17px; height: 17px; accent-color: var(--orange); margin: 0; }
+.menu-info { padding: 8px 10px 6px; font-size: 13px; color: var(--ink-soft); line-height: 1.45; }
+.menu-info[hidden] { display: none; }
+.menu-info p { margin: 0; }
+
+/* HUD */
+.hud { display: flex; flex-direction: column; gap: 4px; }
+.hud-row { display: flex; align-items: center; gap: 16px; font-variant-numeric: tabular-nums; }
+.hud-stat { display: inline-flex; align-items: center; gap: 5px; font-size: 14px; }
+.hud-stat svg { width: 15px; height: 15px; color: var(--ink-soft); flex: none; }
+.hud-stat strong { font-weight: 600; }
+.hud .spacer { flex: 1; }
+.mistakes-pill {
+  display: none; align-items: center; gap: 4px;
+  background: var(--surface); color: var(--accent-text);
+  border: 1px solid var(--border); border-radius: 999px;
+  font-size: 12px; font-weight: 600; padding: 4px 9px; min-height: 36px; cursor: pointer;
+}
+.mistakes-pill.show { display: inline-flex; }
+.hud-msg { font-size: 14px; font-weight: 600; color: var(--accent-text); min-height: 0; }
+.hud-msg:empty { display: none; }
+.hud-msg.warn { color: var(--error); }
+
+/* Board */
+.board-wrap {
+  position: relative;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 20px; padding: 10px;
+}
+.board-scroll { overflow: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; }
+svg#board { display: block; width: 100%; height: auto; touch-action: manipulation; }
+.hex { fill: var(--hex-empty); stroke: var(--hex-stroke); stroke-width: 1.2; cursor: pointer; }
+.hex.given { fill: var(--hex-given); }
+.givenring { fill: none; stroke: var(--hex-stroke); stroke-width: 1; pointer-events: none; }
+.hex.neighbor { fill: var(--hex-candidate); stroke: var(--orange); stroke-dasharray: 4 3; }
+.hex.selected { stroke: var(--orange); stroke-width: 3; stroke-dasharray: none; }
+.hex.bad { fill: var(--error-surface); stroke: var(--error); }
+.hex:focus { stroke: var(--orange); stroke-width: 3.2; outline: none; }
+.hex text, text.cellnum {
+  font-family: ui-rounded, -apple-system, BlinkMacSystemFont, "SF Pro Rounded",
+    "Segoe UI", Roboto, sans-serif; font-weight: 600;
+  text-anchor: middle; dominant-baseline: central; pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+text.cellnum { fill: var(--teal); }
+text.cellnum.given { fill: var(--ink); font-weight: 800; }
+text.cellnum.bad { fill: var(--error); }
+.pathline { stroke: var(--teal); stroke-width: 3; stroke-linecap: round; opacity: 0.35; pointer-events: none; }
+.pathline.bad { stroke: var(--error); opacity: 0.55; stroke-dasharray: 6 5; }
+.linkmark { fill: var(--surface); stroke: var(--link); stroke-width: 2; pointer-events: none; }
+.linkmark.ok { fill: var(--link-ok); stroke: var(--link-ok); }
+.linkdot { fill: var(--surface); pointer-events: none; }
+.errorpip { fill: var(--error); pointer-events: none; }
+.hintpulse { fill: none; stroke: var(--orange); stroke-width: 2.5; pointer-events: none; }
+
+.zoom-pill {
+  position: absolute; top: 16px; right: 16px; z-index: 5;
+  display: none; align-items: center; gap: 2px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  border: 1px solid var(--border); border-radius: 12px; padding: 2px;
+}
+.zoom-pill.show { display: inline-flex; }
+.zoom-pill button {
+  border: 0; background: transparent; color: var(--ink); cursor: pointer;
+  min-width: 44px; min-height: 44px; font-size: 15px; font-weight: 700; border-radius: 9px;
+}
+.zoom-pill button:disabled { color: var(--ink-soft); cursor: default; }
+.zoom-pill .zoom-pct { min-width: 52px; font-size: 13px; font-variant-numeric: tabular-nums; }
+
+.board-status {
+  position: absolute; top: 14px; left: 50%; transform: translateX(-50%); z-index: 6;
+  display: none; align-items: center; gap: 8px; white-space: nowrap;
+  background: color-mix(in srgb, var(--surface) 95%, transparent);
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 7px 12px; font-size: 13px; font-weight: 600; color: var(--ink);
+}
+.board-status.show { display: inline-flex; }
+.board-status.error { color: var(--error); }
+.board-status .spinner {
+  width: 14px; height: 14px; border-radius: 50%; flex: none;
+  border: 2px solid var(--border); border-top-color: var(--orange);
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.board-status button {
+  border: 0; background: transparent; color: var(--accent-text);
+  font-weight: 800; font-size: 13px; cursor: pointer; min-height: 28px; padding: 0 2px;
+}
+.toast {
+  position: absolute; top: 14px; left: 50%; transform: translateX(-50%); z-index: 6;
+  display: none; background: color-mix(in srgb, var(--surface) 95%, transparent);
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 7px 12px; font-size: 13px; font-weight: 600; color: var(--ink); white-space: nowrap;
+}
+.toast.show { display: block; }
+
+.win-card {
+  position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 7;
+  display: none; padding: 16px; border-radius: 16px;
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+}
+.win-card.show { display: block; animation: rise 0.25s ease-out; }
+@keyframes rise { from { transform: translateY(10px); opacity: 0; } to { transform: none; opacity: 1; } }
+.win-head { display: flex; align-items: center; gap: 8px; }
+.win-head .seal { color: var(--orange); font-size: 19px; }
+.win-head h2 {
+  margin: 0; font-size: 19px; font-weight: 800;
+  font-family: ui-rounded, -apple-system, BlinkMacSystemFont, "SF Pro Rounded",
+    "Segoe UI", Roboto, sans-serif;
+}
+.win-head .spacer { flex: 1; }
+.win-dismiss {
+  border: 0; background: transparent; color: var(--ink-soft); cursor: pointer;
+  width: 36px; height: 36px; min-height: 36px; border-radius: 50%; font-size: 15px;
+}
+.win-detail { margin: 6px 0 12px; font-size: 14px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.win-actions { display: flex; gap: 10px; }
+.btn {
+  font-size: 15px; font-weight: 700; cursor: pointer;
+  border-radius: 14px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--ink);
+  padding: 8px 16px; min-height: 50px;
+}
+.btn.primary { background: var(--orange); border-color: var(--orange); color: var(--accent-ink); }
+.btn:disabled { color: var(--ink-soft); cursor: default; }
+.win-actions .btn { flex: 1; }
+.btn.secondary { background: var(--surface-elevated); }
+.btn.destructive { background: var(--error); border-color: var(--error); color: #fff; }
+.win-reopen {
+  position: absolute; right: 16px; bottom: 16px; z-index: 7;
+  display: none; width: 40px; height: 40px; min-height: 40px; border-radius: 50%;
+  background: color-mix(in srgb, var(--surface) 95%, transparent);
+  border: 1px solid var(--border); color: var(--orange); font-size: 17px; cursor: pointer;
+  align-items: center; justify-content: center;
+}
+.win-reopen.show { display: inline-flex; }
+
+/* Action bar */
+.actions { display: flex; gap: 10px; }
+.action-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  background: var(--surface-elevated); color: var(--ink);
+  border: 1px solid var(--border); border-radius: 12px;
+  min-height: 48px; padding: 6px 4px; cursor: pointer;
+  font-size: 12px; font-weight: 600;
+}
+.action-btn .ai { font-size: 16px; line-height: 1; }
+.action-btn.hint .ai { color: var(--orange); }
+.action-btn:disabled { background: var(--surface); color: var(--ink-soft); cursor: default; }
+.action-btn:disabled .ai { color: var(--ink-soft); }
+
+/* Coach pill */
+.coach {
+  display: none; align-items: center; gap: 8px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 6px 6px 6px 12px; font-size: 13px; font-weight: 600;
+}
+.coach.show { display: flex; }
+.coach .spacer { flex: 1; }
+.coach button {
+  border: 0; background: transparent; color: var(--ink-soft); cursor: pointer;
+  width: 36px; height: 36px; min-height: 36px; font-size: 13px; flex: none;
+}
+
+/* Number pad tray */
+.pad-head { display: flex; align-items: center; gap: 6px; min-height: 34px; }
+.stepper {
+  border: 0; background: transparent; color: var(--ink); cursor: pointer;
+  width: 44px; height: 34px; min-height: 34px; font-size: 15px; font-weight: 800; flex: none;
+}
+.stepper:disabled { color: var(--ink-soft); cursor: default; }
+.pad-now { font-size: 14px; font-weight: 600; white-space: nowrap; }
+.pad-head .spacer { flex: 1; }
+.range-pill {
+  background: var(--surface); color: var(--accent-text);
+  border: 1px solid var(--border); border-radius: 999px;
+  font-size: 12px; font-weight: 600; padding: 4px 9px; min-height: 32px; cursor: pointer; flex: none;
+}
+.pad-scroll {
+  height: calc(3 * 44px + 2 * 6px); overflow-y: auto; overflow-x: hidden;
+  scrollbar-width: none; position: relative;
+}
+.pad-scroll::-webkit-scrollbar { display: none; }
+@media (max-height: 699px) { .pad-scroll { height: calc(2 * 44px + 6px); } }
+#pad {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+  gap: 6px; position: relative; padding: 1px;
+}
+.chip {
+  position: relative; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums;
+  background: var(--surface-elevated); color: var(--ink);
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 0; min-height: 44px; cursor: pointer;
+}
+.chip.given { background: var(--hex-given); font-weight: 800; }
+.chip.given::after {
+  content: ""; position: absolute; top: 4px; right: 4px;
+  width: 5px; height: 5px; border-radius: 50%; background: var(--ink-soft);
+}
+.chip.placed { background: var(--surface); color: var(--ink-soft); }
+.chip.placed::after {
+  content: "✓"; position: absolute; top: 2px; right: 4px;
+  font-size: 8px; font-weight: 800; color: var(--teal);
+}
+.chip.selected { background: var(--orange); border-color: var(--orange); color: var(--accent-ink); }
+.chip.selected::after { content: none; }
+.chip:disabled { cursor: default; }
+
+/* Modals */
+.backdrop {
+  position: fixed; inset: 0; z-index: 60; background: var(--scrim);
+  display: none; align-items: flex-end; justify-content: center;
+}
+.backdrop.show { display: flex; }
+@media (min-width: 640px) { .backdrop { align-items: center; padding: 20px; } }
+.sheet {
+  background: var(--canvas); color: var(--ink); width: min(520px, 100%);
+  max-height: 88dvh; display: flex; flex-direction: column;
+  border: 1px solid var(--border); border-bottom: 0;
+  border-radius: 20px 20px 0 0;
+}
+@media (min-width: 640px) { .sheet { border-radius: 20px; border-bottom: 1px solid var(--border); } }
+.sheet-head { display: flex; align-items: center; padding: 14px 20px 4px; }
+.sheet-head h2 {
+  margin: 0; font-size: 17px; font-weight: 800; flex: 1; text-align: center;
+  font-family: ui-rounded, -apple-system, BlinkMacSystemFont, "SF Pro Rounded",
+    "Segoe UI", Roboto, sans-serif;
+}
+.sheet-close {
+  border: 0; background: var(--surface-elevated); color: var(--ink-soft); cursor: pointer;
+  width: 36px; height: 36px; min-height: 36px; border-radius: 50%; font-size: 14px; font-weight: 800; flex: none;
+}
+.sheet-body { overflow-y: auto; padding: 14px 20px 20px; }
+.sheet-foot { padding: 0 20px 20px; }
+.sheet h3 { margin: 16px 0 10px; font-size: 15px; font-weight: 700; }
+.sheet h3:first-child { margin-top: 2px; }
+.size-cards { display: flex; gap: 10px; }
+.size-card {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--border);
+  border-radius: 14px; min-height: 74px; padding: 10px 4px; cursor: pointer;
+}
+.size-card .n { font-size: 22px; font-weight: 800; }
+.size-card .s { font-size: 12px; font-weight: 600; }
+.size-card[aria-pressed="true"] { background: var(--orange); border-color: var(--orange); color: var(--accent-ink); }
+.size-card.locked {
+  background: var(--canvas); color: var(--ink-soft); cursor: default;
+  border-style: dashed;
+}
+.size-card.locked .n { color: var(--ink-soft); }
+.size-card.locked .s { color: var(--accent-text); }
+.diff-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.diff-chip {
+  flex: 1 1 70px; background: var(--surface); color: var(--ink);
+  border: 1px solid var(--border); border-radius: 10px;
+  min-height: 44px; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.diff-chip[aria-pressed="true"] { background: var(--orange); border-color: var(--orange); color: var(--accent-ink); }
+.diff-line { font-size: 14px; color: var(--ink-soft); margin: 12px 0 0; line-height: 1.45; }
+.sheet-foot .btn { width: 100%; }
+.howto-card {
+  display: flex; gap: 12px; align-items: flex-start;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  padding: 14px; margin-bottom: 12px;
+}
+.howto-card svg { width: 24px; height: 24px; color: var(--orange); flex: none; margin-top: 1px; }
+.howto-card strong { display: block; font-size: 14px; margin-bottom: 3px; }
+.howto-card p { margin: 0; font-size: 14px; color: var(--ink-soft); line-height: 1.45; }
+.about h3 { margin-top: 18px; }
+.about p { margin: 0; font-size: 14px; color: var(--ink-soft); line-height: 1.5; }
+.confirm-text { font-size: 15px; color: var(--ink-soft); margin: 4px 0 18px; line-height: 1.5; }
+.confirm-actions { display: flex; gap: 10px; }
+.confirm-actions .btn { flex: 1; min-height: 48px; }
+
+@media (max-width: 430px) {
+  header, .game, footer { padding: 0 10px; }
+  header { padding-top: 22px; padding-bottom: 22px; }
+  .board-wrap { padding: 6px; border-radius: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="../" aria-label="Sixways home"><svg width="26" height="26" viewBox="0 0 40 40" aria-hidden="true"><g fill="#0E636B"><polygon points="20,3 25,6 25,12 20,15 15,12 15,6" fill="#CC520E"/><polygon points="20,17 25,20 25,26 20,29 15,26 15,20"/><polygon points="7,10 12,13 12,19 7,22 2,19 2,13" opacity=".55"/><polygon points="33,10 38,13 38,19 33,22 28,19 28,13" opacity=".55"/><polygon points="7,24 12,27 12,33 7,36 2,33 2,27" opacity=".3"/><polygon points="33,24 38,27 38,33 33,36 28,33 28,27" opacity=".3"/></g></svg><span>Sixways</span></a>
+  <nav aria-label="Main"><a href="../support.html">Support</a><a href="../privacy.html">Privacy</a></nav>
+</header>
+<main class="game">
+<div class="toolbar">
+  <span class="spacer"></span>
+  <button type="button" class="pill" id="pill-settings" aria-haspopup="dialog"><span id="pill-label">36 · Medium</span> <span class="chev">▾</span></button>
+  <button type="button" class="icon-btn" id="btn-howto" aria-label="How to play">?<span class="dot" id="howto-dot"></span></button>
+  <div class="menu-wrap">
+    <button type="button" class="icon-btn" id="btn-menu" aria-label="More options" aria-haspopup="menu" aria-expanded="false">⋯</button>
+    <div class="menu" id="menu" role="menu" hidden>
+      <label class="menu-row toggle"><input type="checkbox" id="chk-errors" checked /><span class="mi">⚠</span> Show Mistakes</label>
+      <button type="button" class="menu-row" id="btn-new" role="menuitem"><span class="mi">+</span> New Puzzle…</button>
+      <button type="button" class="menu-row" id="btn-info" role="menuitem" aria-expanded="false"><span class="mi">ℹ</span> Puzzle Info</button>
+      <div class="menu-info" id="puzzle-info" hidden><p id="gen-note"></p></div>
+      <hr />
+      <button type="button" class="menu-row danger" id="btn-restart" role="menuitem"><span class="mi">↺</span> Restart Puzzle</button>
+    </div>
+  </div>
+</div>
+
+<!-- The clock is deliberately NOT inside a live region: the ticking
+     timer must never be announced. Game messages go to #live-region. -->
+<div class="hud">
+  <div class="hud-row">
+    <span class="hud-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="12 2.5 20.5 7.25 20.5 16.75 12 21.5 3.5 16.75 3.5 7.25"/></svg><strong id="st-filled">0/36</strong></span>
+    <span class="hud-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.5 2.5M9.5 2.5h5"/></svg><strong id="st-time">0:00</strong></span>
+    <span class="hud-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0-3.5 10.9c.7.6 1.1 1.3 1.2 2.1h4.6c.1-.8.5-1.5 1.2-2.1A6 6 0 0 0 12 3z"/><path d="M9.5 19h5M10.5 21.5h3"/></svg><strong id="st-hints">0</strong></span>
+    <span class="spacer"></span>
+    <button type="button" class="mistakes-pill" id="mistakes-pill" aria-label="Mistakes hidden. Activate to show mistakes">⊘ Mistakes hidden</button>
+  </div>
+  <div class="hud-msg" id="st-msg"></div>
+</div>
+<p class="sr-only" role="status" aria-live="polite" id="live-region"></p>
+
+<div class="board-wrap">
+  <div class="zoom-pill" id="zoom-pill">
+    <button type="button" id="btn-zoom-out" aria-label="Zoom out">−</button>
+    <button type="button" class="zoom-pct" id="btn-zoom-reset" aria-label="Reset zoom to 100 percent"><span id="zoom-level">100%</span></button>
+    <button type="button" id="btn-zoom-in" aria-label="Zoom in">+</button>
+  </div>
+  <div class="board-status" id="board-status">
+    <span class="spinner" id="board-status-spin"></span>
+    <span id="board-status-text">Creating puzzle…</span>
+    <button type="button" id="btn-gen-retry" hidden>Retry</button>
+  </div>
+  <div class="toast" id="toast">Loaded a verified backup puzzle.</div>
+  <div class="board-scroll" id="board-scroll">
+    <svg id="board" role="group" aria-label="Sixways hexagonal board. Tab to a cell, then press Enter or Space to place the selected number. Arrow keys move between cells."></svg>
+  </div>
+  <div class="win-card" id="win" role="dialog" aria-labelledby="win-title">
+    <div class="win-head">
+      <span class="seal" aria-hidden="true">✓</span>
+      <h2 id="win-title">Path Complete</h2>
+      <span class="spacer"></span>
+      <button type="button" class="win-dismiss" id="btn-win-dismiss" aria-label="View board">⌄</button>
+    </div>
+    <p class="win-detail" id="win-detail"></p>
+    <div class="win-actions">
+      <button type="button" class="btn primary" id="btn-again">New Puzzle</button>
+      <button type="button" class="btn secondary" id="btn-change-size">Change Size</button>
+    </div>
+  </div>
+  <button type="button" class="win-reopen" id="btn-win-reopen" aria-label="Show win summary">✓</button>
+</div>
+
+<div class="actions">
+  <button type="button" class="action-btn" id="btn-undo"><span class="ai" aria-hidden="true">↩</span>Undo</button>
+  <button type="button" class="action-btn" id="btn-erase"><span class="ai" aria-hidden="true">⌫</span>Erase</button>
+  <button type="button" class="action-btn hint" id="btn-hint"><span class="ai" aria-hidden="true">✦</span>Hint</button>
+</div>
+
+<div class="coach" id="coach">
+  <span id="coach-text">Pick a number below, then tap a cell.</span>
+  <span class="spacer"></span>
+  <button type="button" id="btn-coach-close" aria-label="Dismiss tip">✕</button>
+</div>
+
+<div class="pad-tray">
+  <div class="pad-head">
+    <button type="button" class="stepper" id="btn-prev-num" aria-label="Previous number">‹</button>
+    <span class="pad-now" id="pad-now"></span>
+    <button type="button" class="stepper" id="btn-next-num" aria-label="Next unplaced number">›</button>
+    <span class="spacer"></span>
+    <span id="range-pills" style="display:flex;gap:6px"></span>
+  </div>
+  <div class="pad-scroll" id="pad-scroll">
+    <div id="pad" role="group" aria-label="Number pad"></div>
+  </div>
+</div>
+</main>
+<div class="backdrop" id="modal-settings">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <div class="sheet-head">
+      <span style="width:36px"></span>
+      <h2 id="settings-title">New Puzzle</h2>
+      <button type="button" class="sheet-close" data-close aria-label="Close">✕</button>
+    </div>
+    <div class="sheet-body">
+      <h3>Board Size</h3>
+      <div class="size-cards" id="set-sizes">
+        <button type="button" class="size-card" data-size="4" aria-pressed="true"><span class="n">36</span><span class="s">Free</span></button>
+        <button type="button" class="size-card locked" data-size="5" aria-pressed="false" disabled><span class="n">60</span><span class="s">In the iPhone app</span></button>
+        <button type="button" class="size-card locked" data-size="6" aria-pressed="false" disabled><span class="n">90</span><span class="s">In the iPhone app</span></button>
+      </div>
+      <h3>Difficulty</h3>
+      <div class="diff-chips" id="set-diffs">
+        <button type="button" class="diff-chip" data-diff="easy" aria-pressed="false">Easy</button>
+        <button type="button" class="diff-chip" data-diff="medium" aria-pressed="true">Medium</button>
+        <button type="button" class="diff-chip" data-diff="hard" aria-pressed="false">Hard</button>
+        <button type="button" class="diff-chip" data-diff="expert" aria-pressed="false">Expert</button>
+      </div>
+      <p class="diff-line" id="set-diff-line"></p>
+    </div>
+    <div class="sheet-foot">
+      <button type="button" class="btn primary" id="btn-start">Start Puzzle</button>
+    </div>
+  </div>
+</div>
+
+<div class="backdrop" id="modal-howto">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="howto-title">
+    <div class="sheet-head">
+      <span style="width:36px"></span>
+      <h2 id="howto-title">How to Play</h2>
+      <button type="button" class="sheet-close" data-close aria-label="Close">✕</button>
+    </div>
+    <div class="sheet-body">
+      <div class="howto-card">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="12 2.5 20.5 7.25 20.5 16.75 12 21.5 3.5 16.75 3.5 7.25"/></svg>
+        <div><strong>Build one chain.</strong><p>Fill every hexagon from 1 to N so consecutive numbers share a side.</p></div>
+      </div>
+      <div class="howto-card">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 3 21 12 12 21 3 12"/></svg>
+        <div><strong>Follow the links.</strong><p>An orange ◆ on a border means those two cells must be consecutive.</p></div>
+      </div>
+      <div class="howto-card">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="14" r="3.5"/><path d="M12 3v3M5.5 5.5l2 2M18.5 5.5l-2 2"/></svg>
+        <div><strong>Place &amp; edit.</strong><p>Pick a number below, then tap a cell to place it. Tap a filled cell to select its number; tap it again — or use Erase — to clear it. Fixed numbers can't move.</p></div>
+      </div>
+      <div class="howto-card">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg>
+        <div><strong>Difficulty.</strong><p>Easy and Medium highlight valid moves; Hard and Expert remove the guides.</p></div>
+      </div>
+      <div class="about">
+        <h3>About Sixways (六道)</h3>
+        <p>Named for the six directions of a honeycomb and inspired by the ClasseTICE number-labyrinth puzzle. Every puzzle is verified to have a single unique solution — generated fresh, or served from a preverified backup when generation runs long.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="backdrop" id="modal-restart">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="restart-title">
+    <div class="sheet-head">
+      <span style="width:36px"></span>
+      <h2 id="restart-title">Restart this puzzle?</h2>
+      <button type="button" class="sheet-close" data-close aria-label="Close">✕</button>
+    </div>
+    <div class="sheet-body">
+      <p class="confirm-text">All placed numbers will be cleared.</p>
+      <div class="confirm-actions">
+        <button type="button" class="btn secondary" data-close>Keep Playing</button>
+        <button type="button" class="btn destructive" id="btn-restart-confirm">Restart</button>
+      </div>
+    </div>
+  </div>
+</div>
+<footer>
+  <a class="brand" href="../"><svg width="26" height="26" viewBox="0 0 40 40" aria-hidden="true"><g fill="#0E636B"><polygon points="20,3 25,6 25,12 20,15 15,12 15,6" fill="#CC520E"/><polygon points="20,17 25,20 25,26 20,29 15,26 15,20"/><polygon points="7,10 12,13 12,19 7,22 2,19 2,13" opacity=".55"/><polygon points="33,10 38,13 38,19 33,22 28,19 28,13" opacity=".55"/><polygon points="7,24 12,27 12,33 7,36 2,33 2,27" opacity=".3"/><polygon points="33,24 38,27 38,33 33,36 28,33 28,27" opacity=".3"/></g></svg><span>Sixways</span></a>
+  <nav aria-label="Footer"><a href="../support.html">Support</a><a href="../privacy.html">Privacy</a><a href="../support.html#contact">Contact</a></nav>
+  <p>Free demo — no ads, no tracking. The full game is coming to the App Store.</p>
+</footer>
+<script src="sixways-core.js"></script>
+<script>
+"use strict";
+/* ============ Generation worker (off the main thread) ============ */
+function buildWorkerSource() {
+  var parts = [];
+  parts.push('"use strict";');
+  parts.push("var DIRS = " + JSON.stringify(DIRS) + ";");
+  parts.push("var DIFFS = " + JSON.stringify(DIFFS) + ";");
+  parts.push(edgeKey.toString());
+  parts.push(buildGrid.toString());
+  parts.push(makeBudget.toString());
+  parts.push(unlimitedBudget.toString());
+  parts.push(hamiltonianPath.toString());
+  parts.push(makeSolver.toString());
+  parts.push(shuffle.toString());
+  parts.push("var BUNDLED_PATHS = " + JSON.stringify(BUNDLED_PATHS) + ";");
+  parts.push(bundledPath.toString());
+  parts.push(fallbackFromPath.toString());
+  parts.push(buildFallbackPuzzle.toString());
+  parts.push(generate.toString());
+  parts.push(
+    "self.onmessage = function (e) {" +
+    "  var d = e.data;" +
+    "  try {" +
+    "    var p = generate(d.side, d.diffKey);" +
+    "    if (!p) { self.postMessage({ requestId: d.requestId, ok: false }); return; }" +
+    "    self.postMessage({ requestId: d.requestId, ok: true, side: d.side, diffKey: d.diffKey," +
+    "      fallback: !!p.fallback, cells: p.cells, N: p.N," +
+    "      solution: Array.from(p.solution.entries()), solByNum: p.solByNum," +
+    "      givens: Array.from(p.givens.entries()), givenByNum: Array.from(p.givenByNum.entries())," +
+    "      links: Array.from(p.links) });" +
+    "  } catch (err) { self.postMessage({ requestId: d.requestId, ok: false, error: String(err) }); }" +
+    "};"
+  );
+  return parts.join("\n");
+}
+
+/* ============ Game state & rendering ============ */
+var SVGNS = "http://www.w3.org/2000/svg";
+var svg = document.getElementById("board");
+var G = null;              // committed puzzle (carries its own side + diff)
+var placed = new Map();
+var placedByNum = new Map();
+var selectedNum = 2;
+var selectedCell = -1;
+var undoStack = [];
+var hintsUsed = 0;
+var won = false;
+var showErrors = true;
+// Desired (UI) settings vs committed settings: the committed pair only
+// changes when a new board actually arrives, atomically with it.
+var desiredSide = 4, desiredDiff = "medium";
+var committedDiff = "medium";
+var hexEls = [], numEls = [], linkEls = {}, linkDotEls = {}, lineGroup = null, pipGroup = null, pulseGroup = null;
+// Generation bookkeeping
+var genSeq = 0, isGenerating = false, genTimeoutId = null, genWorker = null, queuedRestart = false;
+// Timer: elapsedAccum holds banked time; startedAt is the live segment.
+// Winning freezes the clock, so victory-screen time is never counted.
+var elapsedAccum = 0, startedAt = null, timerId = null;
+var lastFocusBeforeWin = null;
+var zoomLevel = 1;
+
+function valueAt(cell) {
+  if (!G) return 0;
+  if (G.givens.has(cell)) return G.givens.get(cell);
+  return placed.get(cell) || 0;
+}
+function cellOfNum(num) {
+  if (!G) return -1;
+  if (G.givenByNum.has(num)) return G.givenByNum.get(num);
+  return placedByNum.has(num) ? placedByNum.get(num) : -1;
+}
+function firstUnplacedNum() {
+  if (!G) return 1;
+  for (var n = 1; n <= G.N; n++) if (cellOfNum(n) === -1) return n;
+  return 1;
+}
+function computeLinkNbrs(puzzle) {
+  var m = puzzle.cells.map(function () { return []; });
+  puzzle.links.forEach(function (ek) {
+    var parts = ek.split("-"), a = +parts[0], b = +parts[1];
+    m[a].push(b); m[b].push(a);
+  });
+  puzzle.linkNbrs = m;
+}
+
+/* ---------- Timer helpers ---------- */
+function currentElapsedMs() { return elapsedAccum + (startedAt !== null ? Date.now() - startedAt : 0); }
+function fmtTime(ms) {
+  var s = Math.floor(ms / 1000);
+  return Math.floor(s / 60) + ":" + ("0" + (s % 60)).slice(-2);
+}
+function renderTime() { document.getElementById("st-time").textContent = fmtTime(currentElapsedMs()); }
+function tick() { renderTime(); }
+function ensureTimerRunning() {
+  if (won || startedAt !== null) return;
+  startedAt = Date.now();
+  if (!timerId) timerId = setInterval(tick, 500);
+}
+function freezeTimer() {
+  elapsedAccum = currentElapsedMs();
+  startedAt = null;
+  if (timerId) { clearInterval(timerId); timerId = null; }
+  renderTime();
+}
+function resetTimer() {
+  elapsedAccum = 0; startedAt = null;
+  if (timerId) { clearInterval(timerId); timerId = null; }
+  renderTime();
+}
+function resumeTimerFrom(ms) {
+  elapsedAccum = ms; startedAt = null;
+  if (timerId) { clearInterval(timerId); timerId = null; }
+  renderTime();
+  if (!won && (placed.size > 0 || ms > 0)) ensureTimerRunning();
+}
+
+function hexPoints(cx, cy, size) {
+  var pts = [];
+  for (var i = 0; i < 6; i++) {
+    var ang = (Math.PI / 180) * (60 * i - 30);
+    pts.push((cx + size * Math.cos(ang)).toFixed(2) + "," + (cy + size * Math.sin(ang)).toFixed(2));
+  }
+  return pts.join(" ");
+}
+
+function cellLabel(cell) {
+  var v = valueAt(cell);
+  var label = "Cell " + (cell + 1) + ": ";
+  if (v === 0) label += "empty";
+  else if (G.givens.has(cell)) label += "number " + v + ", fixed number";
+  else label += "number " + v + ", placed by you";
+  if (G.linkNbrs && G.linkNbrs[cell] && G.linkNbrs[cell].length) {
+    var dests = G.linkNbrs[cell].map(function (nb) {
+      var nv = valueAt(nb);
+      return "cell " + (nb + 1) + (nv ? " (number " + nv + ")" : " (empty)");
+    });
+    label += ". Link diamond to " + dests.join(" and ") + " — linked cells must hold consecutive numbers";
+  }
+  if (v === 0) label += ". Press Enter or Space to place number " + selectedNum + " here";
+  return label;
+}
+
+function focusNeighbour(cell, dx, dy) {
+  if (!G || !G.coords) return;
+  var from = G.coords[cell], best = -1, bestScore = -Infinity;
+  G.cells.forEach(function (c) {
+    if (c.id === cell) return;
+    var vx = G.coords[c.id].x - from.x, vy = G.coords[c.id].y - from.y;
+    var dist = Math.sqrt(vx * vx + vy * vy);
+    if (!dist) return;
+    var dot = (vx * dx + vy * dy) / dist;
+    if (dot < 0.45) return;
+    var score = dot * 1000 - dist;
+    if (score > bestScore) { bestScore = score; best = c.id; }
+  });
+  if (best >= 0 && hexEls[best]) hexEls[best].focus();
+}
+
+function buildBoard() {
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  hexEls = []; numEls = []; linkEls = {}; linkDotEls = {};
+  var size = 30, w = Math.sqrt(3) * size;
+  var coords = G.cells.map(function (c) {
+    return { x: w * (c.q + c.r / 2), y: 1.5 * size * c.r };
+  });
+  var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  coords.forEach(function (p) {
+    minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
+    minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+  });
+  var pad = size + 6;
+  svg.setAttribute("viewBox", (minX - pad) + " " + (minY - pad) + " " + (maxX - minX + 2 * pad) + " " + (maxY - minY + 2 * pad));
+
+  lineGroup = document.createElementNS(SVGNS, "g");
+  svg.appendChild(lineGroup);
+
+  G.cells.forEach(function (c) {
+    var p = document.createElementNS(SVGNS, "polygon");
+    p.setAttribute("points", hexPoints(coords[c.id].x, coords[c.id].y, size * 0.94));
+    p.setAttribute("class", "hex" + (G.givens.has(c.id) ? " given" : ""));
+    p.dataset.cell = c.id;
+    // Keyboard + VoiceOver: every cell is a focusable button with a
+    // descriptive label, kept current by refresh().
+    p.setAttribute("tabindex", "0");
+    p.setAttribute("role", "button");
+    p.setAttribute("aria-label", cellLabel(c.id));
+    p.addEventListener("click", function () { onCellTap(c.id); });
+    p.addEventListener("keydown", function (ev) { onCellKey(ev, c.id); });
+    svg.appendChild(p);
+    hexEls[c.id] = p;
+
+    if (G.givens.has(c.id)) {
+      // Inner ring: fixed cells stay distinct from empty cells
+      // even in greyscale (mirrors the native board).
+      var ring = document.createElementNS(SVGNS, "polygon");
+      ring.setAttribute("points", hexPoints(coords[c.id].x, coords[c.id].y, size * 0.94 * 0.86));
+      ring.setAttribute("class", "givenring");
+      ring.setAttribute("aria-hidden", "true");
+      svg.appendChild(ring);
+    }
+
+    var t = document.createElementNS(SVGNS, "text");
+    t.setAttribute("x", coords[c.id].x);
+    t.setAttribute("y", coords[c.id].y + 1);
+    t.setAttribute("class", "cellnum" + (G.givens.has(c.id) ? " given" : ""));
+    t.setAttribute("font-size", G.N >= 90 ? 18 : 21);
+    t.setAttribute("aria-hidden", "true");
+    t.textContent = G.givens.has(c.id) ? G.givens.get(c.id) : "";
+    svg.appendChild(t);
+    numEls[c.id] = t;
+  });
+
+  G.links.forEach(function (ek) {
+    var parts = ek.split("-"), a = +parts[0], b = +parts[1];
+    var mx = (coords[a].x + coords[b].x) / 2, my = (coords[a].y + coords[b].y) / 2;
+    var d = 7.5;
+    var poly = document.createElementNS(SVGNS, "polygon");
+    poly.setAttribute("points", mx + "," + (my - d) + " " + (mx + d) + "," + my + " " + mx + "," + (my + d) + " " + (mx - d) + "," + my);
+    poly.setAttribute("class", "linkmark");
+    poly.setAttribute("aria-hidden", "true");
+    poly.dataset.mx = mx;
+    poly.dataset.my = my;
+    svg.appendChild(poly);
+    linkEls[ek] = poly;
+    // Centre dot, shown when the link is satisfied (the filled,
+    // smaller diamond + dot mirrors the native board).
+    var dot = document.createElementNS(SVGNS, "circle");
+    dot.setAttribute("cx", mx); dot.setAttribute("cy", my); dot.setAttribute("r", 2.2);
+    dot.setAttribute("class", "linkdot");
+    dot.setAttribute("aria-hidden", "true");
+    dot.style.display = "none";
+    svg.appendChild(dot);
+    linkDotEls[ek] = dot;
+  });
+  // Error pips and the hint pulse live in their own groups above
+  // everything else; refresh() rebuilds their contents.
+  pipGroup = document.createElementNS(SVGNS, "g");
+  svg.appendChild(pipGroup);
+  pulseGroup = document.createElementNS(SVGNS, "g");
+  svg.appendChild(pulseGroup);
+  G.coords = coords;
+}
+
+function onCellKey(ev, cell) {
+  if (ev.key === "Enter" || ev.key === " ") {
+    ev.preventDefault();
+    onCellTap(cell);
+  } else if (ev.key === "Delete" || ev.key === "Backspace") {
+    ev.preventDefault();
+    eraseCell(cell); // eraseCell itself refuses while the win state is up
+  } else if (ev.key === "ArrowRight") { ev.preventDefault(); focusNeighbour(cell, 1, 0); }
+  else if (ev.key === "ArrowLeft") { ev.preventDefault(); focusNeighbour(cell, -1, 0); }
+  else if (ev.key === "ArrowUp") { ev.preventDefault(); focusNeighbour(cell, 0, -1); }
+  else if (ev.key === "ArrowDown") { ev.preventDefault(); focusNeighbour(cell, 0, 1); }
+}
+
+function buildPad() {
+  var padEl = document.getElementById("pad");
+  padEl.innerHTML = "";
+  for (var n = 1; n <= G.N; n++) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "chip" + (G.givenByNum.has(n) ? " given" : "");
+    b.textContent = n;
+    b.dataset.num = n;
+    b.setAttribute("aria-label", "Select number " + n + (G.givenByNum.has(n) ? " (fixed on the board)" : ""));
+    (function (num) { b.addEventListener("click", function () { onChipTap(num); }); })(n);
+    padEl.appendChild(b);
+  }
+}
+
+function conflicts() {
+  var bad = new Set();
+  if (!G) return bad;
+  for (var n = 1; n < G.N; n++) {
+    var a = cellOfNum(n), b = cellOfNum(n + 1);
+    if (a >= 0 && b >= 0 && G.cells[a].nbrs.indexOf(b) === -1) { bad.add(a); bad.add(b); }
+  }
+  G.links.forEach(function (ek) {
+    var parts = ek.split("-"), a = +parts[0], b = +parts[1];
+    var va = valueAt(a), vb = valueAt(b);
+    if (va && vb && Math.abs(va - vb) !== 1) { bad.add(a); bad.add(b); }
+  });
+  return bad;
+}
+
+function neighbourHints() {
+  // Cells where the selected number could legally extend the chain.
+  // Uses the COMMITTED board's difficulty (G.diff), never the pending
+  // UI selection, so the glow can't desync during generation.
+  var set = new Set();
+  if (!G || won) return set;
+  if (G.diff === "hard" || G.diff === "expert") return set;
+  if (cellOfNum(selectedNum) >= 0) return set;
+  var prevCell = selectedNum > 1 ? cellOfNum(selectedNum - 1) : -1;
+  var nextCell = selectedNum < G.N ? cellOfNum(selectedNum + 1) : -1;
+  var cands;
+  if (prevCell >= 0 && nextCell >= 0) {
+    // Both neighbours placed: a legal cell must touch BOTH of them
+    // (intersection, not union).
+    var nextNbrs = new Set(G.cells[nextCell].nbrs);
+    cands = G.cells[prevCell].nbrs.filter(function (nb) { return nextNbrs.has(nb) && valueAt(nb) === 0; });
+  } else if (prevCell >= 0 || nextCell >= 0) {
+    var anchor = prevCell >= 0 ? prevCell : nextCell;
+    cands = G.cells[anchor].nbrs.filter(function (nb) { return valueAt(nb) === 0; });
+  } else {
+    cands = [];
+    G.cells.forEach(function (c) { if (valueAt(c.id) === 0) cands.push(c.id); });
+  }
+  // Filled diamond (link) neighbours constrain the cell: if a
+  // candidate is linked to a filled cell, that cell's number must be
+  // consecutive to the selected number.
+  cands.forEach(function (cell) {
+    var ln = (G.linkNbrs && G.linkNbrs[cell]) || [];
+    for (var i = 0; i < ln.length; i++) {
+      var v = valueAt(ln[i]);
+      if (v !== 0 && Math.abs(v - selectedNum) !== 1) return;
+    }
+    set.add(cell);
+  });
+  return set;
+}
+
+function refresh() {
+  if (!G) return;
+  var bad = showErrors ? conflicts() : new Set();
+  var hints = neighbourHints();
+  G.cells.forEach(function (c) {
+    var v = valueAt(c.id);
+    numEls[c.id].textContent = v ? v : "";
+    numEls[c.id].setAttribute("class", "cellnum" + (G.givens.has(c.id) ? " given" : "") + (bad.has(c.id) ? " bad" : ""));
+    var cls = "hex" + (G.givens.has(c.id) ? " given" : "");
+    if (hints.has(c.id)) cls += " neighbor";
+    if (c.id === selectedCell) cls += " selected";
+    if (bad.has(c.id)) cls += " bad";
+    hexEls[c.id].setAttribute("class", cls);
+    hexEls[c.id].setAttribute("aria-label", cellLabel(c.id));
+  });
+  while (lineGroup.firstChild) lineGroup.removeChild(lineGroup.firstChild);
+  for (var n = 1; n < G.N; n++) {
+    var a = cellOfNum(n), b = cellOfNum(n + 1);
+    if (a < 0 || b < 0) continue;
+    // A connector is a violation based on THIS pair's own
+    // adjacency (mirrors the native board): non-adjacent pairs
+    // draw dashed; with mistakes hidden they are not drawn at
+    // all — they are not part of any legal path.
+    var adjacent = G.cells[a].nbrs.indexOf(b) !== -1;
+    if (!adjacent && !showErrors) continue;
+    var line = document.createElementNS(SVGNS, "line");
+    line.setAttribute("x1", G.coords[a].x); line.setAttribute("y1", G.coords[a].y);
+    line.setAttribute("x2", G.coords[b].x); line.setAttribute("y2", G.coords[b].y);
+    line.setAttribute("class", "pathline" + (adjacent ? "" : " bad"));
+    lineGroup.appendChild(line);
+  }
+  // Error pips at the top vertex of each conflicting cell — a
+  // shape cue on top of the error fill and stroke.
+  if (pipGroup) {
+    while (pipGroup.firstChild) pipGroup.removeChild(pipGroup.firstChild);
+    if (showErrors) {
+      bad.forEach(function (cell) {
+        var pip = document.createElementNS(SVGNS, "circle");
+        pip.setAttribute("cx", G.coords[cell].x);
+        pip.setAttribute("cy", G.coords[cell].y - 28.2);
+        pip.setAttribute("r", 3);
+        pip.setAttribute("class", "errorpip");
+        pipGroup.appendChild(pip);
+      });
+    }
+  }
+  G.links.forEach(function (ek) {
+    var parts = ek.split("-"), a = +parts[0], b = +parts[1];
+    var va = valueAt(a), vb = valueAt(b);
+    var ok = va && vb && Math.abs(va - vb) === 1;
+    var el = linkEls[ek];
+    el.setAttribute("class", "linkmark" + (ok ? " ok" : ""));
+    // Satisfied reads three ways: filled, teal, and smaller —
+    // never colour alone. Unsatisfied stays a hollow outline.
+    var mx = +el.dataset.mx, my = +el.dataset.my, d = ok ? 7.5 * 0.85 : 7.5;
+    el.setAttribute("points", mx + "," + (my - d) + " " + (mx + d) + "," + my + " " + mx + "," + (my + d) + " " + (mx - d) + "," + my);
+    if (linkDotEls[ek]) linkDotEls[ek].style.display = ok ? "" : "none";
+  });
+  var chips = document.getElementById("pad").children;
+  for (var i = 0; i < chips.length; i++) {
+    var num = +chips[i].dataset.num;
+    var isGivenChip = G.givenByNum.has(num);
+    var isPlacedChip = cellOfNum(num) >= 0;
+    var cls = "chip" + (isGivenChip ? " given" : "");
+    if (isPlacedChip && !isGivenChip && num !== selectedNum) cls += " placed";
+    if (num === selectedNum) cls += " selected";
+    chips[i].className = cls;
+    chips[i].disabled = won;
+    chips[i].setAttribute("aria-label", num + ", " + (isGivenChip ? "fixed" : isPlacedChip ? "placed" : "unplaced"));
+  }
+  var filled = 0;
+  G.cells.forEach(function (c) { if (valueAt(c.id)) filled++; });
+  document.getElementById("st-filled").textContent = filled + "/" + G.N;
+  document.getElementById("st-hints").textContent = hintsUsed;
+  document.getElementById("pad-now").textContent = G.givenByNum.has(selectedNum)
+    ? selectedNum + " · Fixed"
+    : selectedNum + (cellOfNum(selectedNum) >= 0 ? " · Tap cell to move" : " · Tap cell to place");
+  document.getElementById("btn-undo").disabled = undoStack.length === 0;
+  document.getElementById("btn-erase").disabled = !(selectedCell >= 0 && placed.has(selectedCell) && !won);
+  document.getElementById("btn-hint").disabled = won;
+  syncChrome();
+}
+
+function setMsg(text, warn) {
+  var el = document.getElementById("st-msg");
+  el.textContent = text || "";
+  el.className = "hud-msg" + (warn ? " warn" : "");
+  // Only messages reach the live region — never the ticking clock.
+  document.getElementById("live-region").textContent = text || "";
+}
+
+/* ============ Moves ============ */
+function snapshot(undoneNum) {
+  // Snapshots carry the full pre-move state (placements, hint count,
+  // win flag, banked clock AND whether the clock had a live segment
+  // running) so Undo can restore any of them exactly — including
+  // undoing a hint (hint count goes back down) and undoing a
+  // Restart (a won board comes back won, clock frozen). Mirrors
+  // the native GameSession snapshot.
+  undoStack.push(JSON.stringify({
+    entries: Array.from(placed.entries()),
+    undoneNum: (undoneNum === undefined || undoneNum === null) ? null : undoneNum,
+    hintsUsed: hintsUsed,
+    won: won,
+    elapsedMs: currentElapsedMs(),
+    clockRunning: startedAt !== null
+  }));
+  if (undoStack.length > 300) undoStack.shift();
+}
+function placeNum(num, cell, isHint) {
+  if (!G || won || G.givens.has(cell)) return;
+  snapshot(num); // captures hintsUsed BEFORE a hint increments it
+  if (isHint) hintsUsed++;
+  var old = placedByNum.get(num);
+  if (old !== undefined && old !== cell) placed.delete(old);
+  var existing = placed.get(cell);
+  if (existing !== undefined) placedByNum.delete(existing);
+  placed.set(cell, num); placedByNum.set(num, cell);
+  selectedCell = cell;
+  ensureTimerRunning();
+  setMsg("");
+  advanceSelection(num);
+  refresh();
+  checkWin();
+}
+function advanceSelection(from) {
+  for (var n = from + 1; n <= G.N; n++) if (cellOfNum(n) === -1) { selectedNum = n; return; }
+  for (var m = 1; m < from; m++) if (cellOfNum(m) === -1) { selectedNum = m; return; }
+  selectedNum = from;
+}
+function eraseCell(cell) {
+  // The victory state is locked: Erase / Delete / Backspace must not
+  // pull numbers off a solved board.
+  if (!G || won) return;
+  if (G.givens.has(cell) || !placed.has(cell)) return;
+  snapshot(placed.get(cell));
+  var num = placed.get(cell);
+  placed.delete(cell); placedByNum.delete(num);
+  selectedNum = num; selectedCell = cell;
+  setMsg("");
+  refresh();
+}
+
+function onCellTap(cell) {
+  if (!G || won) return;
+  if (G.givens.has(cell)) {
+    selectedNum = G.givens.get(cell); selectedCell = cell; refresh(); return;
+  }
+  var v = placed.get(cell);
+  if (v !== undefined) {
+    if (v === selectedNum) { eraseCell(cell); return; }
+    selectedNum = v; selectedCell = cell; refresh(); return;
+  }
+  if (G.givenByNum.has(selectedNum)) {
+    setMsg(selectedNum + " is fixed. Choose another number.", true);
+    return;
+  }
+  placeNum(selectedNum, cell, false);
+}
+function onChipTap(num) {
+  if (!G || won) return;
+  selectedNum = num;
+  var c = cellOfNum(num);
+  selectedCell = c;
+  setMsg("");
+  refresh();
+  scrollChipIntoView(num, "center");
+  if (c >= 0 && hexEls[c]) hexEls[c].focus();
+}
+
+function isSolvedBoard() {
+  if (!G) return false;
+  for (var i = 0; i < G.cells.length; i++) if (valueAt(G.cells[i].id) === 0) return false;
+  if (conflicts().size > 0) return false;
+  var linksOk = true;
+  G.links.forEach(function (ek) {
+    var parts = ek.split("-"), a = +parts[0], b = +parts[1];
+    if (Math.abs(valueAt(a) - valueAt(b)) !== 1) linksOk = false;
+  });
+  return linksOk;
+}
+
+function showWin() {
+  won = true;
+  freezeTimer(); // victory-screen time never enters the clock
+  document.getElementById("win-detail").textContent =
+    G.N + " cells · " + DIFF_NAMES[G.diff] + " · " + fmtTime(elapsedAccum) + " · " + hintsUsed + (hintsUsed === 1 ? " hint" : " hints");
+  document.getElementById("btn-win-reopen").classList.remove("show");
+  lastFocusBeforeWin = document.activeElement;
+  document.getElementById("win").classList.add("show");
+  setMsg("Solved!");
+  document.getElementById("btn-again").focus();
+}
+function hideWin() {
+  var wasShown = document.getElementById("win").classList.contains("show");
+  document.getElementById("win").classList.remove("show");
+  document.getElementById("btn-win-reopen").classList.remove("show");
+  if (wasShown && lastFocusBeforeWin && document.contains(lastFocusBeforeWin) && lastFocusBeforeWin.focus) {
+    lastFocusBeforeWin.focus();
+  }
+  lastFocusBeforeWin = null;
+}
+
+function checkWin() {
+  if (!G || won) return;
+  for (var i = 0; i < G.cells.length; i++) if (valueAt(G.cells[i].id) === 0) return;
+  if (conflicts().size > 0) { setMsg("Full board — but some neighbours or links don't line up yet.", true); return; }
+  var linksOk = true;
+  G.links.forEach(function (ek) {
+    var parts = ek.split("-"), a = +parts[0], b = +parts[1];
+    if (Math.abs(valueAt(a) - valueAt(b)) !== 1) linksOk = false;
+  });
+  if (!linksOk) { setMsg("Full board — but a ◆ link isn't on the path yet.", true); return; }
+  showWin();
+  refresh();
+}
+
+/* ============ Generation requests (atomic commit) ============ */
+function ensureWorker() {
+  if (genWorker) return genWorker;
+  try {
+    var blob = new Blob([buildWorkerSource()], { type: "text/javascript" });
+    genWorker = new Worker(URL.createObjectURL(blob));
+    genWorker.onmessage = onWorkerMessage;
+    genWorker.onerror = function () {
+      // Worker died: drop it; the pending request's timeout will
+      // commit the preverified fallback instead of hanging.
+      try { genWorker.terminate(); } catch (e) {}
+      genWorker = null;
+    };
+  } catch (e) {
+    genWorker = null;
+  }
+  return genWorker;
+}
+
+function materializePuzzle(d) {
+  return {
+    cells: d.cells, N: d.N,
+    solution: new Map(d.solution), solByNum: d.solByNum,
+    givens: new Map(d.givens), givenByNum: new Map(d.givenByNum),
+    links: new Set(d.links), side: d.side, diff: d.diffKey, fallback: !!d.fallback
+  };
+}
+
+function commitPuzzle(puzzle) {
+  // Board + settings commit together, here and nowhere else.
+  G = puzzle;
+  committedDiff = puzzle.diff;
+  computeLinkNbrs(G);
+  placed = new Map(); placedByNum = new Map();
+  undoStack = []; hintsUsed = 0; won = false;
+  resetTimer();
+  hideWin();
+  document.getElementById("btn-new").disabled = false;
+  // Mistake-highlighting default comes from the NEW puzzle's
+  // difficulty, applied to every board at commit (mirrors the
+  // native app): Expert starts with it off — including
+  // Expert-to-Expert — and every other level starts with it on.
+  // Nothing about the old board is mutated while a request is
+  // still in flight.
+  showErrors = puzzle.diff !== "expert";
+  document.getElementById("chk-errors").checked = showErrors;
+  pillLabel();
+  buildBoard(); buildPad();
+  // Never pre-select 1 — it is always a printed given. Start on the
+  // first number that actually needs placing.
+  selectedNum = firstUnplacedNum();
+  selectedCell = -1;
+  setMsg("");
+  document.getElementById("gen-note").textContent =
+    "This puzzle: " + G.givens.size + " fixed numbers · " + G.links.size + " link diamonds · verified single solution." +
+    (G.fallback ? " (Preverified backup puzzle — a fresh one couldn't be proved in time.)" : "");
+  refresh();
+  setBoardStatus(null);
+  if (puzzle.fallback) showToast("Loaded a verified backup puzzle.");
+  if (queuedRestart) {
+    // A Restart tapped mid-generation is not lost: the new board is
+    // already in its cleared state, and the player is told so.
+    queuedRestart = false;
+    setMsg("Puzzle restarted.");
+  }
+}
+
+function onWorkerMessage(e) {
+  var d = e.data || {};
+  if (d.requestId !== genSeq) return; // stale result: discard
+  if (genTimeoutId) { clearTimeout(genTimeoutId); genTimeoutId = null; }
+  isGenerating = false;
+  if (d.ok) {
+    commitPuzzle(materializePuzzle(d));
+  } else {
+    var fb = buildFallbackPuzzle(desiredSide, desiredDiff);
+    if (fb) commitPuzzle(fb);
+    else {
+      document.getElementById("btn-new").disabled = false;
+      document.getElementById("gen-note").textContent = "That generation hiccuped — tap New puzzle to try again.";
+      setBoardStatus("error", "Couldn't create a puzzle.");
+    }
+  }
+}
+
+function newGame() {
+  var requestId = ++genSeq;
+  var side = desiredSide, diff = desiredDiff;
+  // A new request supersedes any in-flight one: terminate the old
+  // worker so its search actually stops (mirroring the native
+  // app's task cancellation), instead of only discarding its
+  // result when it eventually arrives. Worker and watchdog cancel
+  // each other the same way: a worker reply clears the watchdog,
+  // and the watchdog terminates the worker.
+  if (isGenerating && genWorker) { try { genWorker.terminate(); } catch (e) {} genWorker = null; }
+  isGenerating = true;
+  var note = document.getElementById("gen-note");
+  note.textContent = "Generating a fresh puzzle…";
+  setBoardStatus("busy", "Creating puzzle…");
+  hideToast();
+  document.getElementById("btn-new").disabled = true;
+  if (genTimeoutId) clearTimeout(genTimeoutId);
+  // Wall-clock deadline: if the worker hasn't answered in 25s, kill
+  // it and commit the preverified fallback for this exact request.
+  genTimeoutId = setTimeout(function () {
+    if (requestId !== genSeq || !isGenerating) return;
+    isGenerating = false;
+    if (genWorker) { try { genWorker.terminate(); } catch (e) {} genWorker = null; }
+    var fb = buildFallbackPuzzle(side, diff);
+    if (fb) commitPuzzle(fb);
+    else {
+      document.getElementById("btn-new").disabled = false;
+      note.textContent = "That generation hiccuped — tap New puzzle to try again.";
+      setBoardStatus("error", "Couldn't create a puzzle.");
+    }
+  }, 25000);
+
+  var w = ensureWorker();
+  if (!w) {
+    // No Worker support: run the same strict generator in a deferred
+    // task so the "Generating…" indicator still paints first.
+    setTimeout(function () {
+      if (requestId !== genSeq) return;
+      if (genTimeoutId) { clearTimeout(genTimeoutId); genTimeoutId = null; }
+      isGenerating = false;
+      var puzzle = generate(side, diff);
+      if (puzzle) commitPuzzle(puzzle);
+      else {
+        document.getElementById("btn-new").disabled = false;
+        note.textContent = "That generation hiccuped — tap New puzzle to try again.";
+        setBoardStatus("error", "Couldn't create a puzzle.");
+      }
+    }, 40);
+    return;
+  }
+  // Contract: the worker reads { requestId, side, diffKey } and
+  // replies { requestId, ok, side, diffKey, ... } — the field is
+  // "side", matching the worker's handler exactly.
+  w.postMessage({ requestId: requestId, side: side, diffKey: diff });
+}
+
+/* ============ Chrome: pill, modals, menu, tray ============ */
+var DIFF_NAMES = { easy: "Easy", medium: "Medium", hard: "Hard", expert: "Expert" };
+var DIFF_LINES = {
+  easy: "Plenty of fixed numbers and links. Valid cells glow.",
+  medium: "Sparse clues — valid cells still glow, mistakes shown.",
+  hard: "Very sparse clues and no glow. Deduce from links and dead ends.",
+  expert: "Fewest clues, no glow, mistakes hidden unless you turn them on."
+};
+var modalStack = [], lastModalFocus = null, toastTimer = null;
+var pendingSize = null, pendingDiff = null; // settings modal working copy
+var rangePillsFor = 0, coachDismissed = false, menuOpen = false;
+
+function pillLabel() {
+  var side = G ? G.side : desiredSide;
+  var diff = G ? G.diff : desiredDiff;
+  document.getElementById("pill-label").textContent =
+    ({ 4: "36", 5: "60", 6: "90" })[side] + " · " + DIFF_NAMES[diff];
+}
+
+function showToast(text) {
+  var toast = document.getElementById("toast");
+  toast.textContent = text;
+  toast.classList.add("show");
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { toast.classList.remove("show"); }, 3000);
+}
+function hideToast() {
+  document.getElementById("toast").classList.remove("show");
+  if (toastTimer) { clearTimeout(toastTimer); toastTimer = null; }
+}
+
+function setBoardStatus(mode, text) {
+  var el = document.getElementById("board-status");
+  if (!mode) { el.classList.remove("show"); el.classList.remove("error"); return; }
+  el.classList.add("show");
+  el.classList.toggle("error", mode === "error");
+  document.getElementById("board-status-spin").style.display = mode === "busy" ? "" : "none";
+  document.getElementById("board-status-text").textContent = text || "";
+  document.getElementById("btn-gen-retry").hidden = mode !== "error";
+}
+
+function openModal(id) {
+  lastModalFocus = document.activeElement;
+  document.getElementById(id).classList.add("show");
+  modalStack.push(id);
+  var close = document.getElementById(id).querySelector("[data-close]");
+  if (close) close.focus();
+}
+function closeModal() {
+  var id = modalStack.pop();
+  if (!id) return;
+  document.getElementById(id).classList.remove("show");
+  if (lastModalFocus && document.contains(lastModalFocus) && lastModalFocus.focus) lastModalFocus.focus();
+  lastModalFocus = null;
+}
+document.querySelectorAll("[data-close]").forEach(function (b) {
+  b.addEventListener("click", closeModal);
+});
+["modal-settings", "modal-howto", "modal-restart"].forEach(function (id) {
+  document.getElementById(id).addEventListener("click", function (e) {
+    if (e.target === e.currentTarget) closeModal();
+  });
+});
+document.addEventListener("keydown", function (e) {
+  if (e.key === "Escape") {
+    if (modalStack.length) closeModal();
+    else closeMenu();
+  }
+});
+
+/* ---------- Settings modal (size + difficulty + Start) ---------- */
+function openSettings() {
+  pendingSize = desiredSide;
+  pendingDiff = desiredDiff;
+  syncSettingsModal();
+  openModal("modal-settings");
+}
+function syncSettingsModal() {
+  document.querySelectorAll("#set-sizes .size-card").forEach(function (b) {
+    b.setAttribute("aria-pressed", +b.dataset.size === pendingSize ? "true" : "false");
+  });
+  document.querySelectorAll("#set-diffs .diff-chip").forEach(function (b) {
+    b.setAttribute("aria-pressed", b.dataset.diff === pendingDiff ? "true" : "false");
+  });
+  document.getElementById("set-diff-line").textContent = DIFF_LINES[pendingDiff] || "";
+}
+document.querySelectorAll("#set-sizes .size-card").forEach(function (b) {
+  b.addEventListener("click", function () { pendingSize = +b.dataset.size; syncSettingsModal(); });
+});
+document.querySelectorAll("#set-diffs .diff-chip").forEach(function (b) {
+  b.addEventListener("click", function () { pendingDiff = b.dataset.diff; syncSettingsModal(); });
+});
+document.getElementById("pill-settings").addEventListener("click", openSettings);
+document.getElementById("btn-start").addEventListener("click", function () {
+  desiredSide = pendingSize;
+  desiredDiff = pendingDiff;
+  // The still-displayed board is NOT mutated here; the new
+  // puzzle's mistake-highlighting default is applied at commit
+  // time in commitPuzzle().
+  closeModal();
+  newGame();
+});
+document.getElementById("btn-change-size").addEventListener("click", function () {
+  hideWin();
+  openSettings();
+});
+
+/* ---------- How to Play ---------- */
+document.getElementById("btn-howto").addEventListener("click", function () {
+  document.getElementById("howto-dot").style.display = "none";
+  try { localStorage.setItem("sixways-howto-seen", "1"); } catch (e) { /* storage unavailable */ }
+  openModal("modal-howto");
+});
+try {
+  if (localStorage.getItem("sixways-howto-seen")) document.getElementById("howto-dot").style.display = "none";
+} catch (e) { /* storage unavailable */ }
+
+/* ---------- More menu ---------- */
+function openMenu() {
+  menuOpen = true;
+  document.getElementById("menu").hidden = false;
+  document.getElementById("btn-menu").setAttribute("aria-expanded", "true");
+}
+function closeMenu() {
+  if (!menuOpen) return;
+  menuOpen = false;
+  document.getElementById("menu").hidden = true;
+  document.getElementById("btn-menu").setAttribute("aria-expanded", "false");
+}
+document.getElementById("btn-menu").addEventListener("click", function (e) {
+  e.stopPropagation();
+  if (menuOpen) closeMenu(); else openMenu();
+});
+document.addEventListener("click", function (e) {
+  if (menuOpen && !document.getElementById("menu").contains(e.target)) closeMenu();
+});
+document.getElementById("btn-info").addEventListener("click", function () {
+  var info = document.getElementById("puzzle-info");
+  var opening = info.hidden;
+  info.hidden = !opening;
+  this.setAttribute("aria-expanded", opening ? "true" : "false");
+});
+document.getElementById("btn-new").addEventListener("click", function () {
+  closeMenu();
+  openSettings();
+});
+document.getElementById("btn-again").addEventListener("click", newGame);
+
+/* ---------- Win card dismiss / reopen ---------- */
+document.getElementById("btn-win-dismiss").addEventListener("click", function () {
+  document.getElementById("win").classList.remove("show");
+  document.getElementById("btn-win-reopen").classList.add("show");
+});
+document.getElementById("btn-win-reopen").addEventListener("click", function () {
+  document.getElementById("btn-win-reopen").classList.remove("show");
+  document.getElementById("win").classList.add("show");
+});
+
+/* ---------- Generation status / mistakes pill / coach ---------- */
+document.getElementById("btn-gen-retry").addEventListener("click", function () {
+  setBoardStatus(null);
+  newGame();
+});
+document.getElementById("mistakes-pill").addEventListener("click", function () {
+  document.getElementById("chk-errors").checked = true;
+  showErrors = true;
+  refresh();
+});
+document.getElementById("btn-coach-close").addEventListener("click", function () {
+  coachDismissed = true;
+  document.getElementById("coach").classList.remove("show");
+});
+
+/* ---------- Pad tray: steppers, range pills, auto-scroll ---------- */
+function nextUnplacedNum(from) {
+  if (!G) return -1;
+  for (var n = from + 1; n <= G.N; n++) if (cellOfNum(n) === -1) return n;
+  return -1;
+}
+function scrollChipIntoView(num, block) {
+  var scroller = document.getElementById("pad-scroll");
+  var chip = scroller.querySelector('.chip[data-num="' + num + '"]');
+  if (!chip) return;
+  var padRect = document.getElementById("pad").getBoundingClientRect();
+  var chipRect = chip.getBoundingClientRect();
+  var y = chipRect.top - padRect.top;
+  var target = y;
+  if (block === "center") target = y - (scroller.clientHeight - chipRect.height) / 2;
+  scroller.scrollTop = Math.max(0, Math.min(target, scroller.scrollHeight - scroller.clientHeight));
+}
+function focusSelectedCellIfPlaced() {
+  var cell = cellOfNum(selectedNum);
+  if (cell >= 0 && hexEls[cell]) hexEls[cell].focus();
+}
+document.getElementById("btn-prev-num").addEventListener("click", function () {
+  if (!G || selectedNum <= 1) return;
+  selectedNum--;
+  selectedCell = cellOfNum(selectedNum);
+  setMsg("");
+  refresh();
+  scrollChipIntoView(selectedNum, "center");
+  focusSelectedCellIfPlaced();
+});
+document.getElementById("btn-next-num").addEventListener("click", function () {
+  var next = nextUnplacedNum(selectedNum);
+  if (next < 0) return;
+  selectedNum = next;
+  selectedCell = cellOfNum(next);
+  setMsg("");
+  refresh();
+  scrollChipIntoView(next, "center");
+  focusSelectedCellIfPlaced();
+});
+
+function showHintPulse(cell) {
+  if (!pulseGroup || !G || !G.coords || !G.coords[cell]) return;
+  var cx = G.coords[cell].x, cy = G.coords[cell].y;
+  var ring = document.createElementNS(SVGNS, "polygon");
+  ring.setAttribute("points", hexPoints(cx, cy, 30));
+  ring.setAttribute("class", "hintpulse");
+  pulseGroup.appendChild(ring);
+  var t0 = null;
+  function stepFn(ts) {
+    if (t0 === null) t0 = ts;
+    var p = (ts - t0) / 1200;
+    if (p >= 1) { ring.remove(); return; }
+    var scale = 1 + 0.9 * p;
+    ring.setAttribute("transform", "translate(" + cx + " " + cy + ") scale(" + scale + ") translate(" + (-cx) + " " + (-cy) + ")");
+    ring.setAttribute("opacity", String(1 - p));
+    requestAnimationFrame(stepFn);
+  }
+  requestAnimationFrame(stepFn);
+}
+
+// Called from refresh(): keeps the pill, mistakes pill, steppers,
+// range pills, coach and zoom pill in step with the board state.
+function syncChrome() {
+  if (!G) return;
+  pillLabel();
+  document.getElementById("mistakes-pill").classList.toggle("show", !showErrors);
+  document.getElementById("btn-prev-num").disabled = selectedNum <= 1;
+  document.getElementById("btn-next-num").disabled = nextUnplacedNum(selectedNum) < 0;
+  if (rangePillsFor !== G.N) {
+    rangePillsFor = G.N;
+    var holder = document.getElementById("range-pills");
+    holder.textContent = "";
+    if (G.N > 36) {
+      for (var start = 1; start <= G.N; start += 30) {
+        (function (s) {
+          var end = Math.min(s + 29, G.N);
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "range-pill";
+          b.textContent = s + "–" + end;
+          b.setAttribute("aria-label", "Jump to numbers " + s + " to " + end);
+          b.addEventListener("click", function () {
+            if (won) return;
+            selectedNum = s;
+            selectedCell = cellOfNum(s);
+            setMsg("");
+            refresh();
+            scrollChipIntoView(s, "start");
+          });
+          holder.appendChild(b);
+        })(start);
+      }
+    }
+  }
+  var coach = document.getElementById("coach");
+  if (!coachDismissed && !won && placed.size < 2) {
+    document.getElementById("coach-text").textContent = cellOfNum(selectedNum) >= 0
+      ? "Tap a highlighted cell to move " + selectedNum + ", or pick another number."
+      : "Pick a number below, then tap a cell.";
+    coach.classList.add("show");
+  } else {
+    coach.classList.remove("show");
+  }
+  document.getElementById("zoom-pill").classList.toggle("show", zoomLevel > 1 || G.N >= 90);
+}
+function doRestart() {
+  snapshot(null);
+  placed.clear(); placedByNum.clear();
+  won = false;
+  hideWin();
+  hintsUsed = 0;      // Restart resets the hint count…
+  resetTimer();       // …and the clock, cleanly.
+  selectedNum = firstUnplacedNum();
+  selectedCell = -1;
+  setMsg("Puzzle restarted.");
+  refresh();
+}
+document.getElementById("btn-restart").addEventListener("click", function () {
+  closeMenu();
+  if (isGenerating) {
+    // Not lost: applied (and announced) when the new board commits.
+    queuedRestart = true;
+    setMsg("Restart queued — it will apply when the new puzzle arrives.");
+    return;
+  }
+  if (!G) return;
+  // Confirm only when there is progress to lose (mirrors native).
+  if (placed.size > 0) { openModal("modal-restart"); return; }
+  doRestart();
+});
+document.getElementById("btn-restart-confirm").addEventListener("click", function () {
+  closeModal();
+  doRestart();
+});
+document.getElementById("btn-undo").addEventListener("click", function () {
+  if (!undoStack.length || !G) return;
+  var parsed = JSON.parse(undoStack.pop());
+  var prevEntries = Array.isArray(parsed) ? parsed : parsed.entries;
+  var undoneNum = Array.isArray(parsed) ? null : parsed.undoneNum;
+  var cellBeforeUndo = (undoneNum !== null && undoneNum !== undefined && placedByNum.has(undoneNum))
+    ? placedByNum.get(undoneNum) : -1;
+  placed = new Map(prevEntries);
+  placedByNum = new Map();
+  placed.forEach(function (num, cell) { placedByNum.set(num, cell); });
+  // Restore the pre-move hint count (undoing a hint placement gives
+  // the hint back) and the pre-move clock. Because the snapshot's
+  // clock was taken before the win, victory-screen time is excluded.
+  hintsUsed = (!Array.isArray(parsed) && typeof parsed.hintsUsed === "number") ? parsed.hintsUsed : hintsUsed;
+  var restoredElapsed = (!Array.isArray(parsed) && typeof parsed.elapsedMs === "number") ? parsed.elapsedMs : currentElapsedMs();
+
+  if (undoneNum !== null && undoneNum !== undefined && !G.givenByNum.has(undoneNum)) {
+    // Preserved behaviour: the number that was just undone becomes
+    // the next number to place.
+    selectedNum = undoneNum;
+    var restoredCell = cellOfNum(undoneNum);
+    selectedCell = restoredCell >= 0 ? restoredCell : cellBeforeUndo;
+  } else {
+    var firstMissing = -1;
+    for (var n = 1; n <= G.N; n++) { if (cellOfNum(n) === -1) { firstMissing = n; break; } }
+    if (firstMissing > 0) {
+      selectedNum = firstMissing;
+      selectedCell = -1;
+    } else if (cellOfNum(selectedNum) >= 0) {
+      selectedCell = cellOfNum(selectedNum);
+    }
+  }
+
+  // Restore the snapshot's win flag and clock EXACTLY (mirrors
+  // the native GameSession): won comes from the snapshot rather
+  // than being recomputed, the banked elapsed is the snapshot's,
+  // and a new live segment starts only if the snapshot was taken
+  // with the clock running and the game not won. Because the
+  // snapshot's clock predates the undone move, victory-screen
+  // time is excluded when undoing the winning move, and undoing
+  // a Restart of a won board restores the frozen won state.
+  // Legacy snapshots without the new fields fall back to the
+  // older inference (solved-board check / resumeTimerFrom).
+  var snapWon = (!Array.isArray(parsed) && typeof parsed.won === "boolean") ? parsed.won : isSolvedBoard();
+  var clockRunning = (!Array.isArray(parsed) && typeof parsed.clockRunning === "boolean") ? parsed.clockRunning : null;
+  if (snapWon) {
+    // Undoing a Restart of a won board restores the won state,
+    // clock frozen at the snapshot's elapsed.
+    elapsedAccum = restoredElapsed; startedAt = null;
+    if (timerId) { clearInterval(timerId); timerId = null; }
+    renderTime();
+    showWin();
+  } else {
+    var wasWon = won;
+    won = false;
+    if (wasWon) hideWin();
+    if (clockRunning === null) {
+      resumeTimerFrom(restoredElapsed);
+    } else {
+      elapsedAccum = restoredElapsed; startedAt = null;
+      if (timerId) { clearInterval(timerId); timerId = null; }
+      if (clockRunning) ensureTimerRunning();
+      renderTime();
+    }
+    setMsg("");
+  }
+  refresh();
+});
+document.getElementById("btn-erase").addEventListener("click", function () {
+  if (won) return; // victory state is locked
+  if (selectedCell >= 0) eraseCell(selectedCell);
+});
+document.getElementById("btn-hint").addEventListener("click", function () {
+  if (!G || won) return;
+  var wrong = [], empty = [];
+  G.cells.forEach(function (c) {
+    if (G.givens.has(c.id)) return;
+    var v = placed.get(c.id);
+    if (v === undefined) empty.push(c.id);
+    else if (v !== G.solution.get(c.id)) wrong.push(c.id);
+  });
+  var pool = empty.length ? empty : wrong;
+  if (!pool.length) { setMsg("Nothing left to hint — the board matches the solution."); return; }
+  var cell = pool[Math.floor(Math.random() * pool.length)];
+  var hintNum = G.solution.get(cell);
+  placeNum(hintNum, cell, true);
+  showHintPulse(cell);
+  // A winning hint keeps the "Solved!" message — never overwrite it.
+  if (!won) setMsg("Hint placed: " + hintNum + ".");
+});
+document.getElementById("chk-errors").addEventListener("change", function (ev) {
+  showErrors = ev.target.checked;
+  refresh();
+});
+
+/* ---------- Board zoom (tap targets on 90-cell boards) ---------- */
+function applyZoom() {
+  svg.style.width = (zoomLevel * 100) + "%";
+  svg.style.height = (zoomLevel * 100) + "%";
+  document.getElementById("zoom-level").textContent = Math.round(zoomLevel * 100) + "%";
+  document.getElementById("btn-zoom-out").disabled = zoomLevel <= 1;
+  document.getElementById("zoom-pill").classList.toggle("show", zoomLevel > 1 || (G && G.N >= 90));
+}
+document.getElementById("btn-zoom-in").addEventListener("click", function () {
+  zoomLevel = Math.min(2.5, zoomLevel + 0.25); applyZoom();
+});
+document.getElementById("btn-zoom-out").addEventListener("click", function () {
+  zoomLevel = Math.max(1, zoomLevel - 0.25); applyZoom();
+});
+document.getElementById("btn-zoom-reset").addEventListener("click", function () {
+  zoomLevel = 1; applyZoom();
+  document.getElementById("board-scroll").scrollLeft = 0;
+  document.getElementById("board-scroll").scrollTop = 0;
+});
+
+document.addEventListener("keydown", function (ev) {
+  if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === "z") {
+    ev.preventDefault();
+    document.getElementById("btn-undo").click();
+  }
+  if ((ev.key === "Delete" || ev.key === "Backspace") && selectedCell >= 0) {
+    // Don't hijack Backspace while a cell handles it itself, and
+    // never erase under the victory overlay (eraseCell also guards).
+    if (document.activeElement && document.activeElement.dataset && document.activeElement.dataset.cell !== undefined) return;
+    ev.preventDefault();
+    eraseCell(selectedCell);
+  }
+});
+
+pillLabel();
+applyZoom();
+newGame();
+
+</script>
+</body>
+</html>
