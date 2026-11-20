@@ -40,7 +40,8 @@ header {
 /* Header brand carries more weight: a bigger mark, and the mark's faded
    hexes strengthened so the cluster reads at header size. The footer
    brand keeps the small, quiet treatment. */
-header .brand svg { width: 34px; height: 34px; }
+header .brand { font-size: 1.55rem; }
+header .brand svg { width: 39px; height: 39px; }
 header .brand svg polygon:nth-of-type(3),
 header .brand svg polygon:nth-of-type(4) { opacity: .8; }
 header .brand svg polygon:nth-of-type(5),
@@ -168,8 +169,54 @@ section p strong { color: var(--ink); }
   .hero .soon { grid-column: 1; grid-row: 3; }
   .hero .play-cta { grid-column: 1; grid-row: 4; }
   .hero .promises { grid-column: 1; grid-row: 5; }
-  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px 30px; }
-  .steps li { margin-bottom: 0; }
-  section.faq { display: grid; grid-template-columns: 1fr 1fr; column-gap: 52px; }
+}
+
+/* ---------- Section cards: steps, pricing, FAQ ----------
+   The flat hairline lists become soft cards in the site palette
+   (flat, no shadows, per the brand). Presentation only — every word
+   of copy is unchanged. Stacked on phone; steps three-across and
+   pricing/FAQ two-across from 768px up. */
+.steps { display: grid; gap: 14px; }
+.steps li {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 18px; margin-bottom: 0; align-items: flex-start;
+}
+.steps li span {
+  flex: none; display: inline-flex; align-items: center; justify-content: center;
+  width: 38px; height: 43px; background: var(--teal); color: var(--surface);
+  font-size: 1.05rem; font-weight: 800; line-height: 1;
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+}
+.boards { display: grid; gap: 14px; }
+.boards li {
+  flex-direction: column; align-items: flex-start; gap: 8px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 18px; padding: 22px;
+}
+.boards li:first-child { padding-top: 22px; }
+.boards li:last-child { border-bottom: 1px solid var(--border); }
+.boards strong { min-width: 0; font-size: 1.3rem; font-weight: 800; color: var(--ink); }
+.boards li:nth-child(2) {
+  border: 2px solid var(--teal);
+  background: color-mix(in srgb, var(--teal) 5%, var(--surface));
+}
+.boards li:nth-child(2) strong { color: var(--teal); }
+.faq details {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 2px 20px; margin-bottom: 14px;
+}
+.faq details:last-of-type { border-bottom: 1px solid var(--border); }
+.faq summary { padding: 15px 0; }
+.faq summary::after {
+  content: "+"; flex: none; display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--teal); color: var(--surface); font-size: 1.05rem; font-weight: 800;
+}
+.faq details[open ] summary::after { content: "–"; background: var(--orange); }
+@media (min-width: 768px) {
+  .steps { grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .boards { grid-template-columns: 1fr 1fr; gap: 18px; }
+  section.faq { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 52px; }
   .faq h2, .faq .more { grid-column: 1 / -1; }
+  .faq details { margin-bottom: 0; }
 }

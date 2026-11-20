@@ -8,17 +8,17 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Sixways">
 <meta property="og:title" content="Play Sixways Free — Hex Number-Path Puzzle & Daily Race">
-<meta property="og:description" content="Play Sixways free in your browser: the 36-cell hex number-path puzzle with all four difficulties, unlimited puzzles and the daily race. No ads, no tracking.">
+<meta property="og:description" content="Play Sixways free in your browser: the hex number-path puzzle on 36-, 60- and 90-cell boards, with all four difficulties, unlimited puzzles and the daily race. No ads, no tracking.">
 <meta property="og:url" content="https://sixways.app/play/">
 <meta property="og:locale" content="en_US">
 <meta property="og:locale:alternate" content="fr_FR">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Play Sixways Free — Hex Number-Path Puzzle & Daily Race">
-<meta name="twitter:description" content="Play Sixways free in your browser: the 36-cell hex number-path puzzle with all four difficulties, unlimited puzzles and the daily race. No ads, no tracking.">
+<meta name="twitter:description" content="Play Sixways free in your browser: the hex number-path puzzle on 36-, 60- and 90-cell boards, with all four difficulties, unlimited puzzles and the daily race. No ads, no tracking.">
 <meta name="theme-color" content="#F3EEE4">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpolygon points='20,2 35,11 35,29 20,38 5,29 5,11' fill='%230E636B'/%3E%3Cpolygon points='20,9 29,14.5 29,25.5 20,31 11,25.5 11,14.5' fill='%23CC520E'/%3E%3C/svg%3E">
 <title>Play Sixways Free — Hex Number-Path Puzzle & Daily Race</title>
-<meta name="description" content="Play Sixways free in your browser: the 36-cell hex number-path puzzle with all four difficulties, unlimited puzzles and the daily race. No ads, no tracking.">
+<meta name="description" content="Play Sixways free in your browser: the hex number-path puzzle on 36-, 60- and 90-cell boards, with all four difficulties, unlimited puzzles and the daily race. No ads, no tracking.">
 <style>
 /* Sixways play page — the site's minimal brand (warm cream, deep teal,
    burnt orange; whitespace and hairlines, no cards, no shadows) over the
@@ -88,6 +88,12 @@ header {
     "Segoe UI", Roboto, sans-serif;
 }
 .brand svg { display: block; }
+/* Bigger header lockup (Jordan, 2026-11-20): ~1.5x mark + wordmark.
+   The board is width-limited on phone and the header growth is
+   absorbed by slack elsewhere at tablet sizes — verified no board
+   shrink at 440x830 and 1194x834. */
+header .brand { font-size: 1.55rem; }
+header .brand svg { width: 39px; height: 39px; }
 header nav, footer nav { display: flex; gap: 22px; align-items: baseline; }
 header nav a, footer nav a {
   color: var(--ink); text-decoration: none; font-weight: 600; font-size: 0.95rem; line-height: 1.2;
@@ -529,9 +535,9 @@ text.cellnum.bad { fill: var(--error); }
   header, .game, footer { max-width: 1460px; padding: 0 32px; }
   .game {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 380px;
+    grid-template-columns: minmax(0, 1fr) 412px;
     grid-template-rows: auto auto auto auto auto 1fr;
-    column-gap: 28px; row-gap: 10px;
+    column-gap: 28px; row-gap: 14px;
   }
   .board-wrap { grid-column: 1; grid-row: 1 / -1; min-height: 0; }
   .toolbar { grid-column: 2; grid-row: 1; }
@@ -540,8 +546,9 @@ text.cellnum.bad { fill: var(--error); }
   #tutorial-invite { grid-column: 2; grid-row: 4; }
   #coach { grid-column: 2; grid-row: 5; }
   .pad-tray { grid-column: 2; grid-row: 6; align-self: end; }
-  #pad { grid-template-columns: repeat(6, 1fr); gap: 6px; }
-  .chip { min-height: 46px; }
+  #pad { grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  .chip { min-height: 50px; }
+  .action-btn { min-height: 52px; }
 }
 
 </style>
@@ -663,8 +670,8 @@ text.cellnum.bad { fill: var(--error); }
       <h3 id="set-size-h">Board Size</h3>
       <div class="size-cards" id="set-sizes">
         <button type="button" class="size-card" data-size="4" aria-pressed="true"><span class="n">36</span><span class="s">Free</span></button>
-        <button type="button" class="size-card locked" data-size="5" aria-pressed="false" disabled><span class="n">60</span><span class="s">In the iPhone app</span></button>
-        <button type="button" class="size-card locked" data-size="6" aria-pressed="false" disabled><span class="n">90</span><span class="s">In the iPhone app</span></button>
+        <button type="button" class="size-card" data-size="5" aria-pressed="false"><span class="n">60</span><span class="s">Free</span></button>
+        <button type="button" class="size-card" data-size="6" aria-pressed="false"><span class="n">90</span><span class="s">Free</span></button>
       </div>
       <h3 id="set-diff-h">Difficulty</h3>
       <div class="diff-chips" id="set-diffs">
@@ -733,7 +740,7 @@ text.cellnum.bad { fill: var(--error); }
   <a class="brand" href="../"><svg width="26" height="26" viewBox="0 0 40 40" aria-hidden="true"><g fill="#0E636B"><polygon points="20,3 25,6 25,12 20,15 15,12 15,6" fill="#CC520E"/><polygon points="20,17 25,20 25,26 20,29 15,26 15,20"/><polygon points="7,10 12,13 12,19 7,22 2,19 2,13" opacity=".55"/><polygon points="33,10 38,13 38,19 33,22 28,19 28,13" opacity=".55"/><polygon points="7,24 12,27 12,33 7,36 2,33 2,27" opacity=".3"/><polygon points="33,24 38,27 38,33 33,36 28,33 28,27" opacity=".3"/></g></svg><span>Sixways</span></a>
   <nav aria-label="Footer"><a href="../support.html">Support</a><a href="../privacy.html">Privacy</a><a href="../support.html#contact">Contact</a></nav>
   <p class="lang-select"><button type="button" id="btn-lang-en" aria-pressed="true">English</button> · <button type="button" id="btn-lang-fr" aria-pressed="false">Français</button></p>
-  <p id="footer-note">Free demo — no ads, no tracking. The full game is coming to the App Store.</p>
+  <p id="footer-note">Free demo — no ads, no tracking.</p>
 </footer>
 <script src="sixways-core.js"></script>
 <script>
@@ -856,7 +863,7 @@ function lsSet(key, val) { try { localStorage.setItem(key, val); } catch (e) { /
 var STR = {
   en: {
     "docTitle": "Play Sixways — free demo",
-    "docDesc": "Play the free Sixways demo in your browser: the 36-cell hex number-path puzzle with all four difficulties. No ads, no tracking, no accounts.",
+    "docDesc": "Play the free Sixways demo in your browser: the hex number-path puzzle on 36-, 60- and 90-cell boards, with all four difficulties. No ads, no tracking, no accounts.",
     "langSwitchAria": "Passer en français",
     "howto": "How to play",
     "menu": "Menu",
@@ -893,7 +900,6 @@ var STR = {
     "boardSize": "Board Size",
     "difficulty": "Difficulty",
     "sizeFree": "Free",
-    "sizeInApp": "In the iPhone app",
     "startPuzzle": "Start Puzzle",
     "close": "Close",
     "brandAria": "Sixways home",
@@ -926,7 +932,7 @@ var STR = {
     "footerSupport": "Support",
     "footerPrivacy": "Privacy",
     "footerContact": "Contact",
-    "footerNote": "Free demo — no ads, no tracking. The full game is coming to the App Store.",
+    "footerNote": "Free demo — no ads, no tracking.",
     "cellPrefix": "Cell {n}: ",
     "cellEmpty": "empty",
     "cellFixed": "number {n}, fixed number",
@@ -988,7 +994,7 @@ var STR = {
   },
   fr: {
     "docTitle": "Sixways — démo gratuite",
-    "docDesc": "Joue à la démo gratuite de Sixways dans ton navigateur : le puzzle hexagonal de 36 cases avec les quatre difficultés. Sans pub, sans suivi, sans compte.",
+    "docDesc": "Joue à la démo gratuite de Sixways dans ton navigateur : le puzzle hexagonal en plateaux de 36, 60 et 90 cases, avec les quatre difficultés. Sans pub, sans suivi, sans compte.",
     "langSwitchAria": "Switch to English",
     "howto": "Comment jouer",
     "menu": "Menu",
@@ -999,7 +1005,7 @@ var STR = {
     "tutorial": "Tutoriel",
     "restartPuzzle": "Recommencer",
     "modeFree": "Partie libre",
-    "modeDaily": "Course du jour",
+    "modeDaily": "Défi du jour",
     "modeGroupAria": "Mode de jeu",
     "mistakesHidden": "Erreurs masquées",
     "mistakesHiddenAria": "Erreurs masquées. Active pour afficher les erreurs.",
@@ -1025,7 +1031,6 @@ var STR = {
     "boardSize": "Taille du plateau",
     "difficulty": "Difficulté",
     "sizeFree": "Gratuit",
-    "sizeInApp": "Dans l'app iPhone",
     "startPuzzle": "Commencer",
     "close": "Fermer",
     "brandAria": "Accueil Sixways",
@@ -1058,7 +1063,7 @@ var STR = {
     "footerSupport": "Assistance",
     "footerPrivacy": "Confidentialité",
     "footerContact": "Contact",
-    "footerNote": "Démo gratuite — sans pub ni suivi. Le jeu complet arrive bientôt sur l'App Store.",
+    "footerNote": "Démo gratuite — sans pub ni suivi.",
     "cellPrefix": "Case {n} : ",
     "cellEmpty": "vide",
     "cellFixed": "nombre {n}, nombre fixe",
@@ -1087,7 +1092,7 @@ var STR = {
     "msgFullLink": "Plateau plein — mais un lien ◆ n'est pas encore sur la chaîne.",
     "msgRestarted": "Puzzle recommencé.",
     "msgRestartQueued": "Recommencement en attente — il s'appliquera à l'arrivée du nouveau puzzle.",
-    "msgDailySettings": "La Course du jour est le même plateau Moyen de 36 cases pour tout le monde — passe en Partie libre pour d'autres tailles et difficultés.",
+    "msgDailySettings": "Le Défi du jour est le même plateau Moyen de 36 cases pour tout le monde — passe en Partie libre pour d'autres tailles et difficultés.",
     "msgHintNone": "Plus rien à indiquer — le plateau correspond à la solution.",
     "msgHintPlaced": "Indice placé : le {n}.",
     "statusCreating": "Création du puzzle…",
@@ -1095,24 +1100,24 @@ var STR = {
     "statusErrorFree": "Impossible de créer un puzzle.",
     "statusErrorDaily": "Impossible de créer le puzzle du jour.",
     "genGeneratingFree": "Génération d'un nouveau puzzle…",
-    "genGeneratingDaily": "Génération du plateau de la Course du jour…",
+    "genGeneratingDaily": "Génération du plateau du Défi du jour…",
     "genHiccupFree": "La génération a échoué — touche Nouveau puzzle pour réessayer.",
-    "genHiccupDaily": "La génération a échoué — touche Course du jour pour réessayer.",
+    "genHiccupDaily": "La génération a échoué — touche Défi du jour pour réessayer.",
     "genNote": "Ce puzzle : {fixed} nombres fixes · {links} losanges de lien · solution unique vérifiée.",
     "genNoteFallback": " (Puzzle de secours prévérifié — impossible d'en prouver un nouveau à temps.)",
-    "genDailySuffix": " Course du jour : le même plateau pour tout le monde aujourd'hui.",
-    "dailyInBooks": "La course du {label} est déjà enregistrée — ce plateau est un entraînement.",
+    "genDailySuffix": " Défi du jour : le même plateau pour tout le monde aujourd'hui.",
+    "dailyInBooks": "Le défi du {label} est déjà enregistré — ce plateau est un entraînement.",
     "dailyRestored": "Bon retour — ta progression du {label} a été restaurée.",
-    "dailyCompleteMsg": "Course du {label} terminée — rejouer est un entraînement. Score officiel : {score}.",
-    "dailyFresh": "La course du {label} — le même plateau pour tout le monde aujourd'hui. Seule la première partie terminée compte.",
-    "dailyFreshStreak": "La course du {label} — le même plateau pour tout le monde aujourd'hui. Seule la première partie terminée compte. 🔥 Série de {streak} jours en jeu.",
-    "pillDaily": "Course · {label}",
+    "dailyCompleteMsg": "Défi du {label} terminé — rejouer est un entraînement. Score officiel : {score}.",
+    "dailyFresh": "Le défi du {label} — le même plateau pour tout le monde aujourd'hui. Seule la première partie terminée compte.",
+    "dailyFreshStreak": "Le défi du {label} — le même plateau pour tout le monde aujourd'hui. Seule la première partie terminée compte. 🔥 Série de {streak} jours en jeu.",
+    "pillDaily": "Défi · {label}",
     "winTitle": "Chaîne terminée",
-    "winDailyTitle": "Course terminée · {label}",
+    "winDailyTitle": "Défi terminé · {label}",
     "winBase": "{n} cases · {diff} · {time} · {h} {hw}",
     "hintOne": "indice",
     "hintMany": "indices",
-    "winUnranked": "{base} · Score {score} — plateau d'entraînement (non classé) : il ne touche ni à tes records ni à la Course du jour.",
+    "winUnranked": "{base} · Score {score} — plateau d'entraînement (non classé) : il ne touche ni à tes records ni au Défi du jour.",
     "winPractice": "Score {score} pour cette partie — entraînement. Officiel : {oscore} en {otime} · 🔥 série de {streak} jours",
     "winOfficial": "Score {score} · {time} · 🔥 série de {streak} jours",
     "winFree": "{base} · Score {score} · Record {best}",
@@ -1212,7 +1217,7 @@ function applyLanguage() {
   document.getElementById("set-size-h").textContent = t("boardSize");
   document.getElementById("set-diff-h").textContent = t("difficulty");
   document.querySelectorAll("#set-sizes .size-card .s").forEach(function (el, i) {
-    el.textContent = i === 0 ? t("sizeFree") : t("sizeInApp");
+    el.textContent = t("sizeFree");
   });
   document.querySelectorAll("#set-diffs .diff-chip").forEach(function (b) {
     b.textContent = t("diff." + b.dataset.diff);
