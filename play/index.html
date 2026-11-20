@@ -65,6 +65,12 @@ body {
   display: flex; flex-direction: column;
   position: relative;
 }
+/* The play screen never scrolls (Jordan, 2026-11-20): the game
+   column is exactly one viewport tall and the footer links moved
+   into the Menu, so the document itself is locked at every size.
+   Inner scrollers (the zoomed board's pan, sheet bodies, the
+   Menu) are unaffected. */
+html, body { overflow: hidden; overscroll-behavior: none; }
 button { font: inherit; }
 button, [role="button"], select, summary, input:not([type="checkbox"], [type="radio"]) { min-height: 2rem; }
 :focus-visible { outline: 3px solid var(--teal); outline-offset: 2px; }
@@ -156,7 +162,17 @@ footer p { margin: 0; margin-left: auto; color: var(--ink-soft); font-size: 0.9r
   position: absolute; right: 0; top: calc(100% + 6px); z-index: 40;
   min-width: 232px; background: var(--surface); border: 1px solid var(--border);
   border-radius: 12px; padding: 6px;
+  /* The Menu now also carries the old footer links + language
+     switch, so it can outgrow short viewports — cap and scroll it
+     internally (the page itself never scrolls). */
+  max-height: calc(100dvh - 84px); overflow-y: auto;
 }
+.menu a.menu-row { text-decoration: none; }
+.menu .lang-select { margin: 0; padding: 7px 10px; }
+/* The shared chrome rule `header nav { display: flex }` would
+   lay the Menu's link rows side by side — they stack. */
+.menu nav { display: block; }
+.menu a.menu-row:hover { color: var(--ink); }
 .menu[hidden] { display: none; }
 .menu-row {
   display: flex; align-items: center; gap: 9px; width: 100%;
@@ -601,6 +617,58 @@ text.cellnum.bad { fill: var(--error); }
   .action-btn { min-height: 52px; }
 }
 
+/* ---------- Phone rearrangement (<768px, Jordan 2026-11-20) ----------
+   Win board space back from the chrome. The status row was
+   measured for both merges the design brief allowed: into the
+   toolbar row (EN fits at 440px; FR — "Partie libre" / "Défi du
+   jour" — overflows by ~26px, i.e. crowding) and into the pad
+   caption row (already full at 60/90: steppers + caption + range
+   pills ≈ 364px, stats would take it to ≈ 500px). So the HUD
+   instead leaves the flow and floats as one compact centred
+   strip over the board area's top letterbox — space the centred
+   field never uses on a phone — and the board grows by the whole
+   row in both languages. Taps pass through the strip except on
+   the mistakes pill itself. */
+@media (max-width: 767px) {
+  /* Slimmer side margins: the game column (board included) uses
+     nearly the full width; the header aligns to the same inset. */
+  header, .game { padding-left: 8px; padding-right: 8px; }
+  .game { position: relative; }
+  .hud {
+    position: absolute; top: 44px; left: 8px; right: 8px; z-index: 4;
+    align-items: center; pointer-events: none;
+  }
+  .hud-row { justify-content: center; gap: 10px; }
+  .hud-row .spacer { display: none; }
+  .hud-stat { font-size: 13px; gap: 4px; }
+  .hud-stat svg { width: 13px; height: 13px; }
+  #mistakes-pill { pointer-events: auto; }
+  /* Game messages become a small centred chip under the stats
+     instead of a flow row that resizes the board. */
+  .hud-msg {
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    border: 1px solid var(--border); border-radius: 999px;
+    padding: 1px 12px; font-size: 13px;
+  }
+  /* The generating / backup-puzzle overlays own the board's top
+     centre while they are up — the stats strip steps aside. */
+  .game:has(#board-status.show) .hud-row,
+  .game:has(#toast.show) .hud-row { visibility: hidden; }
+  /* Slimmer action row — tap targets stay at 40px. */
+  .action-btn { min-height: 40px; padding-top: 4px; padding-bottom: 4px; }
+  /* Slimmer invite/coach bar, still docked directly above the
+     pad caption; the board flexes around it, nothing overflows. */
+  .coach { padding: 4px 4px 4px 10px; }
+  .coach.invite button { min-height: 30px; }
+  /* FR's longer pad caption ("Touche une case pour placer")
+     crowds the range pills at 60/90 and clipped the last pill
+     off the right edge — slim the pad head so it always fits. */
+  .stepper { width: 34px; }
+  .range-pill { padding: 3px 6px; font-size: 11.5px; }
+  .pad-now { font-size: 12.5px; }
+  .pad-head { gap: 4px; }
+}
+
 </style>
 </head>
 <body>
@@ -616,6 +684,14 @@ text.cellnum.bad { fill: var(--error); }
           <button type="button" class="menu-row" id="btn-info" role="menuitem" aria-expanded="false"><span class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9.2"/><path d="M12 11v5M12 8h.01"/></svg></span> <span id="lbl-puzzle-info">Puzzle Info</span></button>
           <div class="menu-info" id="puzzle-info" hidden><p id="gen-note"></p></div>
           <button type="button" class="menu-row" id="btn-tutorial" role="menuitem"><span class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span> <span id="lbl-tutorial">Tutorial</span></button>
+          <hr />
+          <nav aria-label="Footer">
+            <a class="menu-row" href="../support.html"><span class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.2"/><circle cx="12" cy="12" r="3.6"/><path d="M5.6 5.6l3.9 3.9M14.5 14.5l3.9 3.9M18.4 5.6l-3.9 3.9M9.5 14.5l-3.9 3.9"/></svg></span> <span id="lbl-support">Support</span></a>
+            <a class="menu-row" href="../privacy.html"><span class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 2.8v5.4c0 4.3-2.9 8.1-7 9.8-4.1-1.7-7-5.5-7-9.8V5.8z"/></svg></span> <span id="lbl-privacy">Privacy</span></a>
+            <a class="menu-row" href="../support.html#contact"><span class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="m3.5 7.5 8.5 6 8.5-6"/></svg></span> <span id="lbl-contact">Contact</span></a>
+          </nav>
+          <p class="lang-select"><button type="button" id="btn-lang-en" aria-pressed="true">English</button> · <button type="button" id="btn-lang-fr" aria-pressed="false">Français</button></p>
+          <p class="menu-info" id="footer-note">Free demo — no ads, no tracking.</p>
           <hr />
           <button type="button" class="menu-row danger" id="btn-restart" role="menuitem"><span class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 2.6-6.3"/><path d="M3 4v5h5"/></svg></span> <span id="lbl-restart-puzzle">Restart Puzzle</span></button>
         </div>
@@ -786,12 +862,6 @@ text.cellnum.bad { fill: var(--error); }
     </div>
   </div>
 </div>
-<footer>
-  <a class="brand" href="../"><svg width="26" height="26" viewBox="0 0 40 40" aria-hidden="true"><g fill="#0E636B"><polygon points="20,3 25,6 25,12 20,15 15,12 15,6" fill="#CC520E"/><polygon points="20,17 25,20 25,26 20,29 15,26 15,20"/><polygon points="7,10 12,13 12,19 7,22 2,19 2,13" opacity=".55"/><polygon points="33,10 38,13 38,19 33,22 28,19 28,13" opacity=".55"/><polygon points="7,24 12,27 12,33 7,36 2,33 2,27" opacity=".3"/><polygon points="33,24 38,27 38,33 33,36 28,33 28,27" opacity=".3"/></g></svg><span>Sixways</span></a>
-  <nav aria-label="Footer"><a href="../support.html">Support</a><a href="../privacy.html">Privacy</a><a href="../support.html#contact">Contact</a></nav>
-  <p class="lang-select"><button type="button" id="btn-lang-en" aria-pressed="true">English</button> · <button type="button" id="btn-lang-fr" aria-pressed="false">Français</button></p>
-  <p id="footer-note">Free demo — no ads, no tracking.</p>
-</footer>
 <script src="sixways-core.js"></script>
 <script>
 "use strict";
@@ -1290,11 +1360,14 @@ function applyLanguage() {
   document.querySelectorAll(".sheet-close").forEach(function (b) { b.setAttribute("aria-label", t("close")); });
   var headerBrand = document.querySelector("header .brand");
   if (headerBrand) headerBrand.setAttribute("aria-label", t("brandAria"));
-  var fnav = document.querySelectorAll("footer nav a");
-  if (fnav.length >= 3) {
-    fnav[0].textContent = t("footerSupport");
-    fnav[1].textContent = t("footerPrivacy");
-    fnav[2].textContent = t("footerContact");
+  /* The old footer links live in the Menu now — the page no
+     longer scrolls, so the below-the-fold footer is gone. Their
+     labels ride the same footer* strings as before. */
+  var supLbl = document.getElementById("lbl-support");
+  if (supLbl) {
+    supLbl.textContent = t("footerSupport");
+    document.getElementById("lbl-privacy").textContent = t("footerPrivacy");
+    document.getElementById("lbl-contact").textContent = t("footerContact");
   }
   document.getElementById("footer-note").textContent = t("footerNote");
   /* Dynamic re-renders: message line, board status, info note,
@@ -2575,6 +2648,7 @@ function syncChrome() {
     coach.classList.remove("show");
   }
   document.getElementById("zoom-pill").classList.toggle("show", zoomLevel > 1 || G.N >= 90);
+  positionZoomPill();
 }
 function doRestart() {
   snapshot(null);
@@ -2720,6 +2794,7 @@ function applyZoom() {
   document.getElementById("btn-zoom-out").disabled = zoomLevel <= 1;
   document.getElementById("zoom-pill").classList.toggle("show", zoomLevel > 1 || (G && G.N >= 90));
   syncLandscapeLayout();
+  positionZoomPill();
 }
 document.getElementById("btn-zoom-in").addEventListener("click", function () {
   zoomLevel = Math.min(2.5, zoomLevel + 0.25); applyZoom();
@@ -2746,6 +2821,43 @@ document.addEventListener("keydown", function (ev) {
     eraseCell(selectedCell);
   }
 });
+
+/* Zoom pill anchoring (phone): the pill overlays the board
+   wrap's corner, but the drawn hex field letterboxes inside the
+   SVG — on the phone the field starts well below the wrap's top,
+   so the pill floated in an empty band of its own above the
+   board. Anchor it to the field's real top-right corner instead.
+   While zoomed (the field pans inside the scroller) or at tablet
+   sizes and up, the inline anchor is cleared and the plain CSS
+   corner position applies, so the control stays reachable. */
+function positionZoomPill() {
+  var pill = document.getElementById("zoom-pill");
+  if (!pill) return;
+  var anchored = window.matchMedia("(max-width: 767px)").matches
+    && G && G.coords && zoomLevel === 1 && pill.classList.contains("show");
+  if (!anchored) {
+    pill.style.removeProperty("top");
+    pill.style.removeProperty("right");
+    return;
+  }
+  var svgEl = document.getElementById("board");
+  var vb = svgEl.viewBox && svgEl.viewBox.baseVal;
+  if (!vb || !vb.width) return;
+  var sr = svgEl.getBoundingClientRect();
+  if (!sr.width) return;
+  var minX = Infinity, maxX = -Infinity, minY = Infinity;
+  G.coords.forEach(function (p) {
+    if (p.x < minX) minX = p.x;
+    if (p.x > maxX) maxX = p.x;
+    if (p.y < minY) minY = p.y;
+  });
+  var scale = Math.min(sr.width / vb.width, sr.height / vb.height);
+  var fieldTop = sr.top + (sr.height - vb.height * scale) / 2 + ((minY - 28.2) - vb.y) * scale;
+  var fieldRight = sr.left + (sr.width - vb.width * scale) / 2 + ((maxX + 28.2) - vb.x) * scale;
+  var wrap = document.querySelector(".board-wrap").getBoundingClientRect();
+  pill.style.top = Math.max(0, Math.round(fieldTop - wrap.top + 6)) + "px";
+  pill.style.right = Math.max(0, Math.round(wrap.right - fieldRight + 6)) + "px";
+}
 
 /* ---------- Responsive pad + landscape column alignment ----------
    Phone (<768px) on 60/90 boards: the pad PAGINATES by the same
@@ -2861,7 +2973,7 @@ window.addEventListener("resize", function () {
   }, 120);
 });
 if (window.MutationObserver) {
-  var layoutObserver = new MutationObserver(function () { syncLandscapeLayout(); });
+  var layoutObserver = new MutationObserver(function () { syncLandscapeLayout(); positionZoomPill(); });
   ["tutorial-invite", "coach"].forEach(function (id) {
     var el = document.getElementById(id);
     if (el) layoutObserver.observe(el, { attributes: true, attributeFilter: ["class"] });
