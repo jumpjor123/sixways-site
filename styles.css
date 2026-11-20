@@ -92,6 +92,11 @@ header nav a.nav-play {
   transition: background-color .18s ease;
 }
 header nav a.nav-play:hover { background: #0A4E54; color: var(--surface); }
+/* Language selection lives in the footer, not the top bar. */
+.lang-select { font-size: 0.92rem; color: var(--ink-soft); }
+.lang-select a { color: var(--ink-soft); text-decoration: none; font-weight: 600; }
+.lang-select a:hover { color: var(--orange-dark); }
+.lang-select .lang-current { color: var(--ink); font-weight: 700; }
 .nav-play .tri { color: #F2A56B; font-size: 0.8em; margin-right: 8px; vertical-align: 2px; }
 .play-button .tri { color: #F2A56B; font-size: 0.8em; margin-right: 10px; vertical-align: 2px; }
 

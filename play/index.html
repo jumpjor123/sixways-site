@@ -126,7 +126,9 @@ footer p { margin: 0; margin-left: auto; color: var(--ink-soft); font-size: 0.9r
 }
 .tool-btn svg { width: 15px; height: 15px; color: var(--teal); flex: none; }
 .tool-btn:hover { background: var(--surface-elevated); }
-.lang-btn { font-weight: 700; letter-spacing: .03em; min-width: 40px; justify-content: center; }
+.lang-select { font-size: .92rem; color: var(--ink-soft); }
+.lang-select button { background: none; border: none; font: inherit; color: var(--ink-soft); cursor: pointer; padding: 2px 5px; min-height: 0; }
+.lang-select button.active { color: var(--ink); font-weight: 700; }
 .tool-btn .dot {
   position: absolute; top: -3px; right: -3px; width: 9px; height: 9px;
   border-radius: 50%; background: var(--orange); border: 2px solid var(--canvas);
@@ -499,7 +501,6 @@ text.cellnum.bad { fill: var(--error); }
 <header>
   <a class="brand" href="../" aria-label="Sixways home"><svg width="26" height="26" viewBox="0 0 40 40" aria-hidden="true"><g fill="#0E636B"><polygon points="20,3 25,6 25,12 20,15 15,12 15,6" fill="#CC520E"/><polygon points="20,17 25,20 25,26 20,29 15,26 15,20"/><polygon points="7,10 12,13 12,19 7,22 2,19 2,13" opacity=".55"/><polygon points="33,10 38,13 38,19 33,22 28,19 28,13" opacity=".55"/><polygon points="7,24 12,27 12,33 7,36 2,33 2,27" opacity=".3"/><polygon points="33,24 38,27 38,33 33,36 28,33 28,27" opacity=".3"/></g></svg><span>Sixways</span></a>
   <div class="header-actions">
-    <button type="button" class="tool-btn lang-btn" id="btn-lang" aria-label="Passer en français">FR</button>
     <button type="button" class="tool-btn" id="btn-howto" aria-label="How to play"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9.2"/><path d="M9.4 9.1a2.8 2.8 0 1 1 4.1 2.5c-.9.35-1.5 1-1.5 2v.4"/><circle cx="12" cy="17.2" r="0.7" fill="currentColor" stroke="none"/></svg><span id="howto-label">How to play</span><span class="dot" id="howto-dot"></span></button>
     <div class="menu-wrap">
         <button type="button" class="tool-btn" id="btn-menu" aria-label="More options" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg><span id="menu-label">Menu</span></button>
@@ -682,6 +683,7 @@ text.cellnum.bad { fill: var(--error); }
 <footer>
   <a class="brand" href="../"><svg width="26" height="26" viewBox="0 0 40 40" aria-hidden="true"><g fill="#0E636B"><polygon points="20,3 25,6 25,12 20,15 15,12 15,6" fill="#CC520E"/><polygon points="20,17 25,20 25,26 20,29 15,26 15,20"/><polygon points="7,10 12,13 12,19 7,22 2,19 2,13" opacity=".55"/><polygon points="33,10 38,13 38,19 33,22 28,19 28,13" opacity=".55"/><polygon points="7,24 12,27 12,33 7,36 2,33 2,27" opacity=".3"/><polygon points="33,24 38,27 38,33 33,36 28,33 28,27" opacity=".3"/></g></svg><span>Sixways</span></a>
   <nav aria-label="Footer"><a href="../support.html">Support</a><a href="../privacy.html">Privacy</a><a href="../support.html#contact">Contact</a></nav>
+  <p class="lang-select"><button type="button" id="btn-lang-en" aria-pressed="true">English</button> · <button type="button" id="btn-lang-fr" aria-pressed="false">Français</button></p>
   <p id="footer-note">Free demo — no ads, no tracking. The full game is coming to the App Store.</p>
 </footer>
 <script src="sixways-core.js"></script>
@@ -1109,9 +1111,14 @@ function applyLanguage() {
   document.title = t("docTitle");
   var meta = document.querySelector('meta[name="description"]');
   if (meta) meta.setAttribute("content", t("docDesc"));
-  var langBtn = document.getElementById("btn-lang");
-  langBtn.textContent = lang === "fr" ? "EN" : "FR";
-  langBtn.setAttribute("aria-label", t("langSwitchAria"));
+  var langEn = document.getElementById("btn-lang-en");
+  var langFr = document.getElementById("btn-lang-fr");
+  if (langEn && langFr) {
+    langEn.classList.toggle("active", lang === "en");
+    langFr.classList.toggle("active", lang === "fr");
+    langEn.setAttribute("aria-pressed", lang === "en" ? "true" : "false");
+    langFr.setAttribute("aria-pressed", lang === "fr" ? "true" : "false");
+  }
   /* Header + menu */
   document.getElementById("howto-label").textContent = t("howto");
   document.getElementById("btn-howto").setAttribute("aria-label", t("howto"));
@@ -1200,8 +1207,11 @@ function applyLanguage() {
     pillLabel();
   }
 }
-document.getElementById("btn-lang").addEventListener("click", function () {
-  setLang(lang === "fr" ? "en" : "fr");
+document.getElementById("btn-lang-en").addEventListener("click", function () {
+  setLang("en");
+});
+document.getElementById("btn-lang-fr").addEventListener("click", function () {
+  setLang("fr");
 });
 function bestScore(count, diff) {
   var v = lsGet("sixways.best." + count + "." + diff);
