@@ -536,16 +536,35 @@ text.cellnum.bad { fill: var(--error); }
   .game {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 412px;
-    grid-template-rows: auto auto auto auto auto 1fr;
+    /* All rows content-sized, free space spread evenly BETWEEN them
+       (align-content: space-between): the controls compose the full
+       column height instead of clustering at the top over a void
+       above the bottom-anchored pad (the old single 1fr row pooled
+       it all in one gap). The invite and the coach share row 4 —
+       the page never shows both at once — and when neither is shown
+       the :has() rule below collapses the grid to four rows, so a
+       hidden element never leaves a phantom double gap behind. */
+    grid-template-rows: auto auto auto auto auto;
     column-gap: 28px; row-gap: 14px;
+    align-content: space-between;
+  }
+  .game:not(:has(> #tutorial-invite.show, > #coach.show)) {
+    grid-template-rows: auto auto auto auto;
   }
   .board-wrap { grid-column: 1; grid-row: 1 / -1; min-height: 0; }
+  /* Keep the board out of the row sizing: as an absolutely
+     positioned inset box (the wrap is its positioning context) the
+     board area contributes no intrinsic height to the rows it spans.
+     Without this, the board's intrinsic height leaked ~22px into
+     every control row and pooled above the bottom-anchored pad. */
+  .board-scroll { position: absolute; inset: 0; }
   .toolbar { grid-column: 2; grid-row: 1; }
   .hud { grid-column: 2; grid-row: 2; }
   .actions { grid-column: 2; grid-row: 3; }
   #tutorial-invite { grid-column: 2; grid-row: 4; }
-  #coach { grid-column: 2; grid-row: 5; }
-  .pad-tray { grid-column: 2; grid-row: 6; align-self: end; }
+  #coach { grid-column: 2; grid-row: 4; }
+  .pad-tray { grid-column: 2; grid-row: 5; align-self: end; }
+  .game:not(:has(> #tutorial-invite.show, > #coach.show)) .pad-tray { grid-row: 4; }
   #pad { grid-template-columns: repeat(6, 1fr); gap: 8px; }
   .chip { min-height: 50px; }
   .action-btn { min-height: 52px; }

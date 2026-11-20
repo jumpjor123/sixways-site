@@ -10,6 +10,11 @@
   --orange: #CC520E;
   --orange-dark: #A84209;
   --teal: #0E636B;
+  /* Spacing scale (multiples of 4): one section rhythm everywhere —
+     --sp-section of air above AND below every hairline divider,
+     20px heading-to-content, 24px from a card grid to following
+     text, 16px card gaps and paragraph rhythm. */
+  --sp-section: 36px;
 }
 * { box-sizing: border-box; }
 body {
@@ -54,25 +59,25 @@ header nav a, footer nav a {
 header nav a:hover, footer nav a:hover { color: var(--orange-dark); }
 footer {
   display: flex; flex-wrap: wrap; align-items: center; gap: 12px 26px;
-  border-top: 1px solid var(--border); margin-top: 30px;
-  padding-top: 24px; padding-bottom: 34px;
+  border-top: 1px solid var(--border); margin-top: 0;
+  padding-top: 24px; padding-bottom: 36px;
 }
 footer .brand { font-size: 1.05rem; }
 footer p { margin: 0; margin-left: auto; color: var(--ink-soft); font-size: 0.9rem; }
 
 /* hero */
-.hero { text-align: center; padding: 8px 0 10px; }
+.hero { text-align: center; padding: 16px 0 var(--sp-section); }
 .hero h1 {
   font-size: clamp(2.1rem, 6.5vw, 3.2rem); line-height: 1.08; font-weight: 800;
-  letter-spacing: -0.01em; margin: 0 0 18px;
+  letter-spacing: -0.01em; margin: 0 0 16px;
 }
 .hero h1 .accent { color: var(--orange); }
-.hero .lede { color: var(--ink-soft); font-size: 1.13rem; margin: 0 auto 30px; max-width: 32em; }
-.board { max-width: 372px; margin: 0 auto 30px; }
+.hero .lede { color: var(--ink-soft); font-size: 1.13rem; margin: 0 auto 24px; max-width: 32em; }
+.board { max-width: 372px; margin: 0 auto 24px; }
 .board svg { width: 100%; height: auto; display: block; }
 .soon { font-weight: 700; margin: 0 0 8px; }
 .promises { color: var(--ink-soft); font-size: 0.93rem; margin: 0; }
-.play-cta { margin: 18px 0 14px; }
+.play-cta { margin: 16px 0; }
 .play-button {
   display: inline-block; background: var(--teal); color: var(--surface);
   font-family: ui-rounded, -apple-system, BlinkMacSystemFont, "SF Pro Rounded",
@@ -102,17 +107,17 @@ header nav a.nav-play:hover { background: #0A4E54; color: var(--surface); }
 .play-button .tri { color: #F2A56B; font-size: 0.8em; margin-right: 10px; vertical-align: 2px; }
 
 /* sections */
-section { padding: 30px 0 6px; border-top: 1px solid var(--border); margin-top: 34px; }
+section { padding: var(--sp-section) 0; border-top: 1px solid var(--border); margin-top: 0; }
 .hero { border-top: none; margin-top: 0; }
-h2 { font-size: 1.45rem; font-weight: 800; margin: 0 0 16px; }
-section p { color: var(--ink-soft); margin: 0 0 14px; }
+h2 { font-size: 1.45rem; font-weight: 800; margin: 0 0 20px; }
+section p { color: var(--ink-soft); margin: 0 0 16px; }
 section p strong { color: var(--ink); }
 
-.steps { list-style: none; margin: 0 0 16px; padding: 0; }
+.steps { list-style: none; margin: 0 0 24px; padding: 0; }
 .steps li { display: flex; gap: 14px; margin-bottom: 12px; color: var(--ink-soft); }
 .steps li span { color: var(--teal); font-weight: 800; font-size: 1.15rem; line-height: 1.45; }
 
-.boards { list-style: none; margin: 0 0 16px; padding: 0; }
+.boards { list-style: none; margin: 0 0 24px; padding: 0; }
 .boards li {
   display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: baseline;
   padding: 11px 0; border-bottom: 1px solid var(--border);
@@ -149,19 +154,19 @@ section p strong { color: var(--ink); }
    (words left, board right) with the steps and FAQ using the width,
    so the page fills the screen instead of floating in it. */
 @media (min-width: 768px) {
+  :root { --sp-section: 48px; }
   header, main, footer { max-width: min(1120px, 94vw); }
   .board { max-width: 470px; }
   .prose { max-width: 780px; }
-  section { padding: 38px 0 8px; margin-top: 42px; }
-  .hero { padding-top: 16px; }
+  .hero { padding-top: 24px; }
 }
 @media (min-width: 1024px) and (orientation: landscape) {
   .hero {
     display: grid; grid-template-columns: minmax(0, 1.02fr) minmax(0, 1fr);
-    column-gap: 60px; align-items: center; text-align: left;
+    column-gap: 60px; align-items: center; align-content: center; text-align: left;
   }
   .hero h1 { grid-column: 1; grid-row: 1; margin-bottom: 16px; }
-  .hero .lede { grid-column: 1; grid-row: 2; margin: 0 0 26px; }
+  .hero .lede { grid-column: 1; grid-row: 2; margin: 0 0 24px; }
   .hero .board {
     grid-column: 2; grid-row: 1 / span 5; justify-self: center;
     width: 100%; max-width: 540px; margin: 0;
@@ -176,26 +181,34 @@ section p strong { color: var(--ink); }
    (flat, no shadows, per the brand). Presentation only — every word
    of copy is unchanged. Stacked on phone; steps three-across and
    pricing/FAQ two-across from 768px up. */
-.steps { display: grid; gap: 14px; }
+.steps { display: grid; gap: 16px; }
 .steps li {
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: 16px; padding: 18px; margin-bottom: 0; align-items: flex-start;
+  border-radius: 16px; padding: 20px; margin-bottom: 0; align-items: flex-start;
 }
 .steps li span {
   flex: none; display: inline-flex; align-items: center; justify-content: center;
   width: 38px; height: 43px; background: var(--teal); color: var(--surface);
   font-size: 1.05rem; font-weight: 800; line-height: 1;
+  /* Optical centring: the 43px badge centres on the first text line
+     (27px line box) instead of sharing its top edge. */
+  margin-top: -8px;
   clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
 }
-.boards { display: grid; gap: 14px; }
+.boards { display: grid; gap: 16px; }
 .boards li {
   flex-direction: column; align-items: flex-start; gap: 8px;
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: 18px; padding: 22px;
+  border-radius: 18px; padding: 24px;
 }
-.boards li:first-child { padding-top: 22px; }
+.boards li:first-child { padding-top: 24px; }
 .boards li:last-child { border-bottom: 1px solid var(--border); }
-.boards strong { min-width: 0; font-size: 1.3rem; font-weight: 800; color: var(--ink); }
+.boards strong { min-width: 0; font-size: 1.3rem; font-weight: 800; color: var(--ink); line-height: 1.3; }
+/* Equal-height cards, uneven copy: headings share the top baseline,
+   and each card's text centres in the space that remains, so the
+   short card's spare air splits above and below its line instead of
+   pooling at the bottom. */
+.boards li span { margin-top: auto; margin-bottom: auto; }
 .boards li:nth-child(2) {
   border: 2px solid var(--teal);
   background: color-mix(in srgb, var(--teal) 5%, var(--surface));
@@ -206,7 +219,7 @@ section p strong { color: var(--ink); }
   border-radius: 16px; padding: 2px 20px; margin-bottom: 14px;
 }
 .faq details:last-of-type { border-bottom: 1px solid var(--border); }
-.faq summary { padding: 15px 0; }
+.faq summary { padding: 16px 0; }
 .faq summary::after {
   content: "+"; flex: none; display: inline-flex; align-items: center; justify-content: center;
   width: 28px; height: 28px; border-radius: 50%;
@@ -215,8 +228,12 @@ section p strong { color: var(--ink); }
 .faq details[open ] summary::after { content: "–"; background: var(--orange); }
 @media (min-width: 768px) {
   .steps { grid-template-columns: repeat(3, 1fr); gap: 16px; }
-  .boards { grid-template-columns: 1fr 1fr; gap: 18px; }
-  section.faq { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 52px; }
-  .faq h2, .faq .more { grid-column: 1 / -1; }
+  .boards { grid-template-columns: 1fr 1fr; gap: 16px; }
+  section.faq { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 24px; }
+  .faq h2 { grid-column: 1 / -1; }
+  /* Three cards in a two-column grid leave one cell over: the
+     "More answers" line takes that cell, vertically centred, so the
+     section closes evenly instead of trailing under a hole. */
+  .faq .more { grid-column: 2; align-self: center; margin: 0; }
   .faq details { margin-bottom: 0; }
 }
