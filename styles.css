@@ -12,9 +12,9 @@
   --teal: #0E636B;
   /* Spacing scale (multiples of 4): one section rhythm everywhere —
      --sp-section of air above AND below every hairline divider,
-     20px heading-to-content, 24px from a card grid to following
+     16px heading-to-content, 16px from a card grid to following
      text, 16px card gaps and paragraph rhythm. */
-  --sp-section: 36px;
+  --sp-section: 26px;
 }
 * { box-sizing: border-box; }
 body {
@@ -109,15 +109,15 @@ header nav a.nav-play:hover { background: #0A4E54; color: var(--surface); }
 /* sections */
 section { padding: var(--sp-section) 0; border-top: 1px solid var(--border); margin-top: 0; }
 .hero { border-top: none; margin-top: 0; }
-h2 { font-size: 1.45rem; font-weight: 800; margin: 0 0 20px; }
+h2 { font-size: 1.45rem; font-weight: 800; margin: 0 0 16px; }
 section p { color: var(--ink-soft); margin: 0 0 16px; }
 section p strong { color: var(--ink); }
 
-.steps { list-style: none; margin: 0 0 24px; padding: 0; }
+.steps { list-style: none; margin: 0 0 16px; padding: 0; }
 .steps li { display: flex; gap: 14px; margin-bottom: 12px; color: var(--ink-soft); }
 .steps li span { color: var(--teal); font-weight: 800; font-size: 1.15rem; line-height: 1.45; }
 
-.boards { list-style: none; margin: 0 0 24px; padding: 0; }
+.boards { list-style: none; margin: 0 0 16px; padding: 0; }
 .boards li {
   display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: baseline;
   padding: 11px 0; border-bottom: 1px solid var(--border);
@@ -154,7 +154,7 @@ section p strong { color: var(--ink); }
    (words left, board right) with the steps and FAQ using the width,
    so the page fills the screen instead of floating in it. */
 @media (min-width: 768px) {
-  :root { --sp-section: 48px; }
+  :root { --sp-section: 30px; }
   header, main, footer { max-width: min(1120px, 94vw); }
   .board { max-width: 470px; }
   .prose { max-width: 780px; }
