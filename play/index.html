@@ -1275,7 +1275,7 @@ function showWin() {
   if (unranked) {
     detail = base + " · Score " + score + " — practice board (unranked): it never touches your bests or the Daily Race.";
   } else if (mode === "daily" && dailyDay !== null) {
-    title = "Daily #" + dailyDay + " Complete";
+    title = "Daily Complete · " + dailyDateLabel(dailyDay);
     var history = loadDailyHistory();
     var wasOfficial = !!history.results[dailyDay];
     if (!winRecord) {
@@ -1495,6 +1495,13 @@ function newGame() {
 }
 
 /* ============ Daily Race requests (Phase 2) ============ */
+/* Display only: the day number is the seed ingredient and stays internal;
+   players see the date, never the count. */
+function dailyDateLabel(day) {
+  var d = new Date(2026, 11, 1);
+  d.setDate(d.getDate() + day);
+  return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+}
 function startDaily() {
   dailyDay = dayNumberFor(new Date());
   newDailyGame(dailyDay);
@@ -1571,15 +1578,15 @@ function restoreDailyProgress(day) {
     refresh();
     if (won) { showWin(); return; }
     setMsg(official
-      ? "Daily #" + day + " is already in the books — this board is practice."
-      : "Welcome back — your Daily #" + day + " progress was restored.");
+      ? "The " + dailyDateLabel(day) + " daily is already in the books — this board is practice."
+      : "Welcome back — your " + dailyDateLabel(day) + " daily progress was restored.");
     return;
   }
   if (official) {
-    setMsg("Daily #" + day + " complete — replaying is practice. Official score " + official.score + ".");
+    setMsg(dailyDateLabel(day) + " daily complete — replaying is practice. Official score " + official.score + ".");
   } else {
     var streak = effectiveStreak(history, day);
-    setMsg("Daily #" + day + " — the same board for everyone today. First finish counts." +
+    setMsg("The " + dailyDateLabel(day) + " daily — the same board for everyone today. First finish counts." +
       (streak > 0 ? " 🔥 " + streak + "-day streak on the line." : ""));
   }
   refresh();
@@ -1627,7 +1634,7 @@ var coachOn = tutorialChoice === "on";
 
 function pillLabel() {
   if (mode === "daily" && dailyDay !== null) {
-    document.getElementById("pill-label").textContent = "Daily #" + dailyDay;
+    document.getElementById("pill-label").textContent = "Daily · " + dailyDateLabel(dailyDay);
     return;
   }
   var side = G ? G.side : desiredSide;
