@@ -507,6 +507,43 @@ text.cellnum.bad { fill: var(--error); }
   * { animation: none !important; transition: none !important; }
 }
 
+/* ---------- Tablet & desktop (≥768px) ----------
+   The phone layout above (≤767px) is unchanged. On wider screens the
+   760px page cap and the board's 560px cap come off: in a single
+   column the board is sized by the space it actually has (the flexed
+   board area), and in landscape ≥1024px the game becomes two columns
+   — board left and dominant, controls in a right-hand column. The
+   board SVG keeps width/height 100% and no CSS max-width ever clamps
+   it, so zoom (inline % sizes from applyZoom) is unaffected. */
+@media (min-width: 768px) {
+  header, .game, footer { max-width: 1080px; padding: 0 28px; }
+  svg#board { max-width: none; }
+  .win-card { max-width: 560px; }
+  .hud-stat { font-size: 15px; }
+  .action-btn { min-height: 46px; font-size: 14px; }
+  .pad-head { min-height: 30px; }
+  .pad-now { font-size: 14.5px; }
+  .chip { min-height: 44px; font-size: 15px; }
+}
+@media (min-width: 1024px) and (orientation: landscape) {
+  header, .game, footer { max-width: 1460px; padding: 0 32px; }
+  .game {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 380px;
+    grid-template-rows: auto auto auto auto auto 1fr;
+    column-gap: 28px; row-gap: 10px;
+  }
+  .board-wrap { grid-column: 1; grid-row: 1 / -1; min-height: 0; }
+  .toolbar { grid-column: 2; grid-row: 1; }
+  .hud { grid-column: 2; grid-row: 2; }
+  .actions { grid-column: 2; grid-row: 3; }
+  #tutorial-invite { grid-column: 2; grid-row: 4; }
+  #coach { grid-column: 2; grid-row: 5; }
+  .pad-tray { grid-column: 2; grid-row: 6; align-self: end; }
+  #pad { grid-template-columns: repeat(6, 1fr); gap: 6px; }
+  .chip { min-height: 46px; }
+}
+
 </style>
 </head>
 <body>

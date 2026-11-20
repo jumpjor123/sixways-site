@@ -140,3 +140,36 @@ section p strong { color: var(--ink); }
 .prose p, .prose li { color: var(--ink-soft); }
 .prose p strong, .prose li strong { color: var(--ink); }
 .prose .intro { font-size: 1.08rem; }
+
+/* ---------- Tablet & desktop (≥768px) ----------
+   Phone keeps the 680px single column above, unchanged. Wider
+   screens get a wider measure (prose keeps a readable line length),
+   a larger hero board, and — in landscape — a two-column hero
+   (words left, board right) with the steps and FAQ using the width,
+   so the page fills the screen instead of floating in it. */
+@media (min-width: 768px) {
+  header, main, footer { max-width: min(1120px, 94vw); }
+  .board { max-width: 470px; }
+  .prose { max-width: 780px; }
+  section { padding: 38px 0 8px; margin-top: 42px; }
+  .hero { padding-top: 16px; }
+}
+@media (min-width: 1024px) and (orientation: landscape) {
+  .hero {
+    display: grid; grid-template-columns: minmax(0, 1.02fr) minmax(0, 1fr);
+    column-gap: 60px; align-items: center; text-align: left;
+  }
+  .hero h1 { grid-column: 1; grid-row: 1; margin-bottom: 16px; }
+  .hero .lede { grid-column: 1; grid-row: 2; margin: 0 0 26px; }
+  .hero .board {
+    grid-column: 2; grid-row: 1 / span 5; justify-self: center;
+    width: 100%; max-width: 540px; margin: 0;
+  }
+  .hero .soon { grid-column: 1; grid-row: 3; }
+  .hero .play-cta { grid-column: 1; grid-row: 4; }
+  .hero .promises { grid-column: 1; grid-row: 5; }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px 30px; }
+  .steps li { margin-bottom: 0; }
+  section.faq { display: grid; grid-template-columns: 1fr 1fr; column-gap: 52px; }
+  .faq h2, .faq .more { grid-column: 1 / -1; }
+}
