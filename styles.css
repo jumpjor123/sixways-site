@@ -34,9 +34,17 @@ header {
   padding-top: 22px; padding-bottom: 10px;
 }
 .brand {
-  display: flex; align-items: center; gap: 9px;
-  color: var(--ink); text-decoration: none; font-weight: 800; font-size: 1.2rem;
+  display: flex; align-items: center; gap: 10px;
+  color: var(--ink); text-decoration: none; font-weight: 800; font-size: 1.45rem;
 }
+/* Header brand carries more weight: a bigger mark, and the mark's faded
+   hexes strengthened so the cluster reads at header size. The footer
+   brand keeps the small, quiet treatment. */
+header .brand svg { width: 34px; height: 34px; }
+header .brand svg polygon:nth-of-type(3),
+header .brand svg polygon:nth-of-type(4) { opacity: .8; }
+header .brand svg polygon:nth-of-type(5),
+header .brand svg polygon:nth-of-type(6) { opacity: .5; }
 .brand svg { display: block; }
 header nav, footer nav { display: flex; gap: 22px; }
 header nav a, footer nav a {
