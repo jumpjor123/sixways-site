@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sixways — le puzzle hexagonal de nombres pour iPhone</title>
+<meta name="description" content="Sixways est un puzzle hexagonal de nombres pour iPhone. Relie les nombres à travers le nid d'abeilles — chaque puzzle a exactement une solution. Gratuit, entièrement hors ligne, sans pub, sans abonnement.">
+<link rel="stylesheet" href="../styles.css?v=3">
+</head>
+<body>
+<header>
+  <a class="brand" href="index.html" aria-label="Accueil Sixways"><svg width="26" height="26" viewBox="0 0 40 40" aria-hidden="true"><g fill="#0E636B"><polygon points="20,3 25,6 25,12 20,15 15,12 15,6" fill="#CC520E"/><polygon points="20,17 25,20 25,26 20,29 15,26 15,20"/><polygon points="7,10 12,13 12,19 7,22 2,19 2,13" opacity=".55"/><polygon points="33,10 38,13 38,19 33,22 28,19 28,13" opacity=".55"/><polygon points="7,24 12,27 12,33 7,36 2,33 2,27" opacity=".3"/><polygon points="33,24 38,27 38,33 33,36 28,33 28,27" opacity=".3"/></g></svg><span>Sixways</span></a>
+  <nav aria-label="Main"><a href="../">English</a><a class="nav-play" href="../play/"><span class="tri" aria-hidden="true">▶</span>Jouer</a></nav>
+</header>
+<main>
+
+  <section class="hero">
+    <h1>Une chaîne. Chaque hexagone.<br><span class="accent">Exactement une solution.</span></h1>
+    <p class="lede">Relie les nombres dans l'ordre à travers un nid d'abeilles, chacun
+      touchant le suivant. Un solveur intégré prouve que chaque puzzle a exactement
+      une solution — aucun hasard, jamais.</p>
+    <div class="board"><svg viewBox="-136 -126 272 252" role="img" aria-label="Un nid d'abeilles de dix-neuf hexagones avec les nombres de 1 à 19 reliés en une seule chaîne">
+<polygon points="-103.9,-30.0 -77.9,-15.0 -77.9,15.0 -103.9,30.0 -129.9,15.0 -129.9,-15.0" fill="#CC520E" stroke="#BFB5A0" stroke-width="1.2" stroke-linejoin="round"/>
+<polygon points="-77.9,15.0 -52.0,30.0 -52.0,60.0 -77.9,75.0 -103.9,60.0 -103.9,30.0" fill="#E4DAC6" stroke="#BFB5A0" stroke-width="1.2" stroke-linejoin="round"/>
+<polygon points="-52.0,60.0 -26.0,75.0 -26.0,105.0 -52.0,120.0 -77.9,105.0 -77.9,75.0" fill="#FCF9F3" stroke="#BFB5A0" stroke-width="1.2" stroke-linejoin="round"/>
+<polygon points="-77.9,-75.0 -52.0,-60.0 -52.0,-30.0 -77.9,-15.0 -103.9,-30.0 -103.9,-60.0" fill="#FCF9F3" stroke="#BFB5A0" stroke-width="1.2" stroke-linejoin="round"/>
+<polygon points="-52.0,-30.0 -26.0,-15.0 -26.0,15.0 -52.0,30.0 -77.9,15.0 -77.9,-15.0" fill="#FCF9F3" stroke="#BFB5A0" stroke-width="1.2" stroke-linejoin="round"/>
+<polygon points="-26.0,15.0 0.0,30.0 0.0,60.0 -26.0,75.0 -52.0,60.0 -52.0,30.0" fill="#FCF9F3" stroke="#BFB5A0" stroke-width="1.2" stroke-linejoin="round"/>
+<polygon points="0.0,60.0 26.0,75.0 26.0,105.0 0.0,120.0 -26.0,105.0 -26.0,75.0" fill="#FCF9F3" stroke="#BFB5A0" stroke-width="1.2" stroke-linejoin="round"/>
+<polygon points="-52.0,-120.0 -26.0,-105.0 -26.0,-75.0 -52.0,-60.0 -77.9,-75.0 -77.9,-105.0" fill="#FCF9F3" stroke="#BFB5A0" stroke-width="1.2" stroke-linejoin="round"/>
+<polygon points="-26.0,-75.0 0.0,-60.0 0.0,-30.0 -26.0,-15.0 -52.0,-30.0 -52.0,-60.0" fill="#E4DAC6" stroke="#BFB5A0" stroke-width="1.2" stroke-linejoin="round"/>
+<polygon points="0.0,-30.0 26.0,-15.0 26.0,15.0 0.0,30.0 -26.0,15.0 -26.0,-15.0" fill="#FCF9F3" stroke="#BFB5A0" stroke-width="1.2" stroke-linejoin="round"/>
+<polygon points="26.0,15.0 52.0,30.0 52.0,60.0 26.0,75.0 0.0,60.0 0.0,30.0" fill="#FCF9F3" stroke="#BFB5A0" stroke-width="1.2" stroke-linejoin="round"/>
+<polygon points="52.0,60.0 77.9,75.0 77.9,105.0 52.0,120.0 26.0,105.0 26.0,75.0" fill="#E4DAC6" stroke="#BFB5A0" stroke-width="1.2" stroke-linejoin="round"/>
+<polygon points="0.0,-120.0 26.0,-105.0 26.0,-75.0 0.0,-60.0 -26.0,-75.0 -26.0,-105.0" fill="#FCF9F3" stroke="#BFB5A0" stroke-width="1.2" stroke-linejoin="round"/>
+<polygon points="26.0,-75.0 52.0,-60.0 52.0,-30.0 26.0,-15.0 0.0,-30.0 0.0,-60.0" fill="#FCF9F3" stroke="#BFB5A0" stroke-width="1.2" stroke-linejoin="round"/>
+<polygon points="52.0,-30.0 77.9,-15.0 77.9,15.0 52.0,30.0 26.0,15.0 26.0,-15.0" fill="#FCF9F3" stroke="#BFB5A0" stroke-width="1.2" stroke-linejoin="round"/>
+<polygon points="77.9,15.0 103.9,30.0 103.9,60.0 77.9,75.0 52.0,60.0 52.0,30.0" fill="#FCF9F3" stroke="#BFB5A0" stroke-width="1.2" stroke-linejoin="round"/>
+<polygon points="52.0,-120.0 77.9,-105.0 77.9,-75.0 52.0,-60.0 26.0,-75.0 26.0,-105.0" fill="#FCF9F3" stroke="#BFB5A0" stroke-width="1.2" stroke-linejoin="round"/>
+<polygon points="77.9,-75.0 103.9,-60.0 103.9,-30.0 77.9,-15.0 52.0,-30.0 52.0,-60.0" fill="#E4DAC6" stroke="#BFB5A0" stroke-width="1.2" stroke-linejoin="round"/>
+<polygon points="103.9,-30.0 129.9,-15.0 129.9,15.0 103.9,30.0 77.9,15.0 77.9,-15.0" fill="#FCF9F3" stroke="#BFB5A0" stroke-width="1.2" stroke-linejoin="round"/>
+<polyline points="-103.9,0.0 -52.0,0.0 0.0,0.0 52.0,0.0 26.0,-45.0 -26.0,-45.0 -77.9,-45.0 -52.0,-90.0 0.0,-90.0 52.0,-90.0 77.9,-45.0 103.9,0.0 77.9,45.0 26.0,45.0 -26.0,45.0 -77.9,45.0 -52.0,90.0 0.0,90.0 52.0,90.0" fill="none" stroke="#0E636B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.4"/>
+<text x="-103.9" y="5.0" text-anchor="middle" font-size="15" font-weight="700" fill="#FFFDF9" font-family="ui-rounded,-apple-system,'SF Pro Rounded',sans-serif">1</text>
+<text x="-77.9" y="50.0" text-anchor="middle" font-size="15" font-weight="700" fill="#0B2E33" font-family="ui-rounded,-apple-system,'SF Pro Rounded',sans-serif">16</text>
+<text x="-52.0" y="95.0" text-anchor="middle" font-size="15" font-weight="700" fill="#0B2E33" font-family="ui-rounded,-apple-system,'SF Pro Rounded',sans-serif">17</text>
+<text x="-77.9" y="-40.0" text-anchor="middle" font-size="15" font-weight="700" fill="#0B2E33" font-family="ui-rounded,-apple-system,'SF Pro Rounded',sans-serif">7</text>
+<text x="-52.0" y="5.0" text-anchor="middle" font-size="15" font-weight="700" fill="#0B2E33" font-family="ui-rounded,-apple-system,'SF Pro Rounded',sans-serif">2</text>
+<text x="-26.0" y="50.0" text-anchor="middle" font-size="15" font-weight="700" fill="#0B2E33" font-family="ui-rounded,-apple-system,'SF Pro Rounded',sans-serif">15</text>
+<text x="0.0" y="95.0" text-anchor="middle" font-size="15" font-weight="700" fill="#0B2E33" font-family="ui-rounded,-apple-system,'SF Pro Rounded',sans-serif">18</text>
+<text x="-52.0" y="-85.0" text-anchor="middle" font-size="15" font-weight="700" fill="#0B2E33" font-family="ui-rounded,-apple-system,'SF Pro Rounded',sans-serif">8</text>
+<text x="-26.0" y="-40.0" text-anchor="middle" font-size="15" font-weight="700" fill="#0B2E33" font-family="ui-rounded,-apple-system,'SF Pro Rounded',sans-serif">6</text>
+<text x="0.0" y="5.0" text-anchor="middle" font-size="15" font-weight="700" fill="#0B2E33" font-family="ui-rounded,-apple-system,'SF Pro Rounded',sans-serif">3</text>
+<text x="26.0" y="50.0" text-anchor="middle" font-size="15" font-weight="700" fill="#0B2E33" font-family="ui-rounded,-apple-system,'SF Pro Rounded',sans-serif">14</text>
+<text x="52.0" y="95.0" text-anchor="middle" font-size="15" font-weight="700" fill="#0B2E33" font-family="ui-rounded,-apple-system,'SF Pro Rounded',sans-serif">19</text>
+<text x="0.0" y="-85.0" text-anchor="middle" font-size="15" font-weight="700" fill="#0B2E33" font-family="ui-rounded,-apple-system,'SF Pro Rounded',sans-serif">9</text>
+<text x="26.0" y="-40.0" text-anchor="middle" font-size="15" font-weight="700" fill="#0B2E33" font-family="ui-rounded,-apple-system,'SF Pro Rounded',sans-serif">5</text>
+<text x="52.0" y="5.0" text-anchor="middle" font-size="15" font-weight="700" fill="#0B2E33" font-family="ui-rounded,-apple-system,'SF Pro Rounded',sans-serif">4</text>
+<text x="77.9" y="50.0" text-anchor="middle" font-size="15" font-weight="700" fill="#0B2E33" font-family="ui-rounded,-apple-system,'SF Pro Rounded',sans-serif">13</text>
+<text x="52.0" y="-85.0" text-anchor="middle" font-size="15" font-weight="700" fill="#0B2E33" font-family="ui-rounded,-apple-system,'SF Pro Rounded',sans-serif">10</text>
+<text x="77.9" y="-40.0" text-anchor="middle" font-size="15" font-weight="700" fill="#0B2E33" font-family="ui-rounded,-apple-system,'SF Pro Rounded',sans-serif">11</text>
+<text x="103.9" y="5.0" text-anchor="middle" font-size="15" font-weight="700" fill="#0B2E33" font-family="ui-rounded,-apple-system,'SF Pro Rounded',sans-serif">12</text>
+</svg></div>
+    <p class="soon">Bientôt sur l'App Store</p>
+    <p class="play-cta"><a class="play-button" href="../play/"><span class="tri" aria-hidden="true">▶</span>Joue à la démo gratuite dans ton navigateur</a></p>
+    <p class="promises">Sans pub · Sans abonnement · Sans compte · Sans suivi · Entièrement hors ligne</p>
+  </section>
+
+  <section>
+    <h2>Comment ça se joue</h2>
+    <ol class="steps">
+      <li><span>1</span>Les nombres consécutifs se placent dans des hexagones qui se touchent. Certains nombres sont déjà imprimés sur le plateau.</li>
+      <li><span>2</span>Un losange orange entre deux hexagones signifie que ces deux cases doivent contenir des nombres consécutifs.</li>
+      <li><span>3</span>Remplis chaque hexagone pour compléter la chaîne. Si tu es bloqué, c'est un coup qui manque — jamais la faute du puzzle.</li>
+    </ol>
+    <p>Et une fois par jour, la Course du jour : un puzzle construit sur ton téléphone
+      à partir de la date elle-même, donc le même pour tous les joueurs. Cours contre
+      la montre, bats ton meilleur temps.</p>
+  </section>
+
+  <section>
+    <h2>Trois plateaux, quatre difficultés</h2>
+    <ul class="boards">
+      <li><strong>36 cases</strong><span>Le jeu complet, puzzles illimités — gratuit pour toujours</span></li>
+      <li><strong>60 cases</strong><span>Des chaînes plus longues, plus de place pour se tromper — dans le déblocage</span></li>
+      <li><strong>90 cases</strong><span>Le grand nid d'abeilles, pour les résolutions tranquilles du dimanche — dans le déblocage</span></li>
+    </ul>
+    <p><strong>Facile</strong> — plus de nombres donnés, coups valides en surbrillance.
+      <strong>Moyen</strong> — le plateau équilibré.
+      <strong>Difficile</strong> — aucune surbrillance ; la chaîne est à toi de la trouver.
+      <strong>Expert</strong> — indices minimaux, aucun guide.</p>
+  </section>
+
+  <section>
+    <h2>Un prix honnête</h2>
+    <ul class="boards">
+      <li><strong>Gratuit — 0 $</strong><span>Le plateau complet de 36 cases, les quatre difficultés, la Course du jour, les classements et succès Game Center</span></li>
+      <li><strong>Déblocage complet — 3,99 $</strong><span>Les plateaux de 60 et 90 cases. Achat unique, Partage familial inclus, à toi pour toujours</span></li>
+    </ul>
+    <p>C'est le seul achat de l'app. Sans pub, sans abonnement, rien d'autre à acheter.</p>
+  </section>
+
+  <section class="faq">
+    <h2>Questions</h2>
+    <details>
+      <summary>Est-ce vraiment entièrement hors ligne ?</summary>
+      <p>Oui. Sixways ne contient aucun code réseau — les puzzles sont générés sur ton
+        téléphone et ta progression y est stockée. Les seules choses qui utilisent une
+        connexion sont les services d'Apple : acheter ou restaurer le déblocage, et
+        publier tes scores sur Game Center. Un score gagné hors ligne est conservé sur
+        l'appareil et publié dès que tu es de nouveau en ligne.</p>
+    </details>
+    <details>
+      <summary>Le puzzle du jour est-il vraiment le même pour tout le monde ?</summary>
+      <p>Oui. Le puzzle de la Course du jour est généré sur le téléphone à partir de la
+        date elle-même, selon une recette fixe — la même date produit le même plateau
+        sur chaque appareil, sans aucun serveur pour l'envoyer. Tout le monde court sur
+        le puzzle identique ; le meilleur temps fait la une.</p>
+    </details>
+    <details>
+      <summary>Y a-t-il des pubs ou un abonnement ?</summary>
+      <p>Ni l'un ni l'autre, et il n'y en aura jamais. Le seul achat de Sixways est le
+        déblocage unique et optionnel à 3,99 $ pour les plateaux de 60 et 90 cases.
+        Sans pub, sans analyse, sans suivi, sans compte.</p>
+    </details>
+    <details>
+      <summary>Sur quels iPhone fonctionne-t-il ?</summary>
+      <p>Tout iPhone sous iOS 17 ou plus récent. Les puzzles et la progression vivent
+        sur l'appareil où tu joues ; le déblocage te suit sur tes appareils avec le
+        même identifiant Apple — achète une fois, restaure partout.</p>
+    </details>
+    <details>
+      <summary>Comment savoir qu'un puzzle n'a qu'une seule solution ?</summary>
+      <p>Chaque puzzle est vérifié par un solveur intégré avant de t'être montré. Le
+        solveur prouve qu'il existe exactement une façon de compléter la chaîne — si un
+        plateau généré ne peut pas être prouvé unique, il n'arrive jamais sur ton écran.</p>
+    </details>
+    <p class="more">Des réponses plus longues vivent sur la <a href="support.html">page d'assistance</a>.</p>
+  </section>
+
+</main>
+<footer>
+  <a class="brand" href="index.html"><svg width="26" height="26" viewBox="0 0 40 40" aria-hidden="true"><g fill="#0E636B"><polygon points="20,3 25,6 25,12 20,15 15,12 15,6" fill="#CC520E"/><polygon points="20,17 25,20 25,26 20,29 15,26 15,20"/><polygon points="7,10 12,13 12,19 7,22 2,19 2,13" opacity=".55"/><polygon points="33,10 38,13 38,19 33,22 28,19 28,13" opacity=".55"/><polygon points="7,24 12,27 12,33 7,36 2,33 2,27" opacity=".3"/><polygon points="33,24 38,27 38,33 33,36 28,33 28,27" opacity=".3"/></g></svg><span>Sixways</span></a>
+  <nav aria-label="Footer"><a href="support.html">Assistance</a><a href="privacy.html">Confidentialité</a><a href="support.html#contact">Contact</a></nav>
+  <p>Sans pub · Sans suivi · Fonctionne hors ligne</p>
+</footer>
+</body>
+</html>
