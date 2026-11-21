@@ -313,3 +313,31 @@ section p strong { color: var(--ink); }
   .faq .more { grid-column: 2; align-self: stretch; margin: 0; }
   .faq details { margin-bottom: 0; }
 }
+
+/* Dark mode (Batch 16, Jordan 2026-11-21): device preference only,
+   no manual toggle. Same palette as the play page; the hero board
+   artwork and the daily mark carry literal fills, so they are
+   remapped here by attribute. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --canvas: #0B2226;
+    --surface: #14333A;
+    --parchment: #265058;
+    --border: #2A5258;
+    --ink: #EAF3F1;
+    --ink-soft: #9DB8B5;
+    --orange: #E0641F;
+    --orange-dark: #F0854C;
+    --teal: #4FB3BC;
+  }
+  .play-button:hover { background: #6FC3CB; }
+  header nav a.nav-play:hover { background: #6FC3CB; }
+  .board svg polygon[fill="#FCF9F3"] { fill: #122E33; }
+  .board svg polygon[fill="#E4DAC6"] { fill: #265058; }
+  .board svg polygon[fill="#CC520E"] { fill: #E0641F; }
+  .board svg polygon[stroke="#BFB5A0"] { stroke: #3D6B70; }
+  .board svg polyline { stroke: #4FB3BC; }
+  .board svg text[fill="#0B2E33"] { fill: #EAF3F1; }
+  .daily-mark polygon { fill: #4FB3BC; }
+  .daily-mark circle, .daily-mark path { stroke: #0B2226; }
+}
