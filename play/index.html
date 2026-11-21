@@ -84,7 +84,7 @@ header, .game, footer { max-width: 760px; margin: 0 auto; padding: 0 22px; }
 header {
   flex: none;
   display: flex; align-items: center; justify-content: space-between;
-  padding-top: 8px; padding-bottom: 8px; width: 100%;
+  padding-top: 6px; padding-bottom: 4px; width: 100%;
 }
 .header-actions { display: flex; align-items: center; gap: 8px; }
 .brand {
@@ -94,12 +94,12 @@ header {
     "Segoe UI", Roboto, sans-serif;
 }
 .brand svg { display: block; }
-/* Bigger header lockup (Jordan, 2026-11-20): ~1.5x mark + wordmark.
-   The board is width-limited on phone and the header growth is
-   absorbed by slack elsewhere at tablet sizes — verified no board
-   shrink at 440x830 and 1194x834. */
-header .brand { font-size: 1.55rem; }
-header .brand svg { width: 39px; height: 39px; }
+/* Slim header lockup (Batch 15, Jordan 2026-11-21): the mark and
+   wordmark step back down so the settings chip can share the
+   header row; the freed height goes to the game area. Both
+   chrome rows are one height — 34px (ruling 13). */
+header .brand { font-size: 1.12rem; height: 34px; }
+header .brand svg { width: 27px; height: 27px; }
 header nav, footer nav { display: flex; gap: 22px; align-items: baseline; }
 header nav a, footer nav a {
   color: var(--ink); text-decoration: none; font-weight: 600; font-size: 0.95rem; line-height: 1.2;
@@ -122,24 +122,29 @@ footer p { margin: 0; margin-left: auto; color: var(--ink-soft); font-size: 0.9r
   display: flex; flex-direction: column; gap: 6px;
 }
 
-/* Toolbar (settings pill, how-to, menu — all labelled) */
+/* Toolbar (mode switch + relocated stat chips on phone; the
+   settings pill lives in the header since Batch 15) */
 .toolbar { display: flex; align-items: center; gap: 8px; min-height: 34px; flex-wrap: wrap; }
 .toolbar .spacer { flex: 1; }
 /* Mode switch: Free Play / Daily Race (Phase 2) */
 .mode-switch {
   display: inline-flex; background: var(--surface); border: 1px solid var(--border);
-  border-radius: 999px; padding: 2px; gap: 2px;
+  border-radius: 999px; padding: 2px; gap: 2px; height: 34px;
 }
 .mode-switch button {
   border: 0; background: transparent; color: var(--ink-soft); cursor: pointer;
-  border-radius: 999px; font-size: 13px; font-weight: 700; padding: 4px 12px; min-height: 28px;
+  border-radius: 999px; font-size: 12.5px; font-weight: 700; padding: 4px 10px; min-height: 28px;
 }
 .mode-switch button[aria-pressed="true"] { background: var(--teal); color: var(--surface); }
+/* Settings pill — since Batch 15 it lives in the header row as a
+   mini chip (Jordan's pick of three treatments, 2026-11-21),
+   exactly 34px tall like everything else in the header stack
+   (ruling 13 supersedes the chip's original 26px min-height). */
 .pill {
-  display: inline-flex; align-items: center; gap: 5px;
-  background: var(--surface); color: var(--ink);
+  display: inline-flex; align-items: center; gap: 5px; flex: none;
+  background: var(--surface); color: var(--ink); white-space: nowrap;
   border: 1px solid var(--border); border-radius: 999px;
-  font-size: 13.5px; font-weight: 600; padding: 4px 11px; min-height: 32px; cursor: pointer;
+  font-size: 12px; font-weight: 600; padding: 0 12px; height: 34px; min-height: 34px; cursor: pointer;
 }
 .pill .chev { font-size: 10px; font-weight: 800; }
 .tool-btn {
@@ -157,6 +162,20 @@ footer p { margin: 0; margin-left: auto; color: var(--ink-soft); font-size: 0.9r
   position: absolute; top: -3px; right: -3px; width: 9px; height: 9px;
   border-radius: 50%; background: var(--orange); border: 2px solid var(--canvas);
 }
+/* How to play is icon-only in the header (Batch 15): a true 34px
+   circle, not a pill with the words removed. The text span stays
+   in the DOM (applyLang writes it) but is never rendered — the
+   button's aria-label carries the accessible name, and the red
+   dot keeps marking the undecided-tutorial state. */
+#btn-howto {
+  width: 34px; height: 34px; min-height: 34px; padding: 0; flex: none;
+  border-radius: 50%; justify-content: center; gap: 0;
+}
+#btn-howto svg { width: 16px; height: 16px; }
+#btn-howto #howto-label { display: none; }
+/* Menu button: same 34px as the rest of the header stack
+   (ruling 13) — it grows from its natural 32px. */
+#btn-menu { height: 34px; min-height: 34px; }
 .menu-wrap { position: relative; }
 .menu {
   position: absolute; right: 0; top: calc(100% + 6px); z-index: 40;
@@ -513,7 +532,6 @@ text.cellnum.bad { fill: var(--error); }
   footer { padding-top: 12px; padding-bottom: 14px; }
   .toolbar { gap: 6px; }
   .mode-switch button { font-size: 12px; padding: 4px 9px; }
-  .pill { font-size: 12.5px; padding: 4px 10px; }
   .tool-btn { font-size: 12px; padding: 4px 10px; gap: 5px; }
   .coach { font-size: 12.5px; padding: 4px 4px 4px 10px; }
   .coach.invite button { min-height: 30px; }
@@ -555,11 +573,13 @@ text.cellnum.bad { fill: var(--error); }
 @media (min-width: 768px) {
   header, .game, footer { max-width: 1080px; padding: 0 28px; }
   /* No extra top cushion on the play page (Jordan, 2026-11-20):
-     the header keeps the normal tight 8px above the brand row, as
+     the header keeps the normal tight 6px above the brand row, as
      on phone — the freed height goes to the game area. The
+     shorthand above zeroes the vertical padding, so the bottom
+     is re-asserted too (Batch 15: 6px / 4px at every width). The
      homepage keeps its own header cushion; this page's bottom
      cushion below is unchanged. */
-  header { padding-top: 8px; }
+  header { padding-top: 6px; padding-bottom: 4px; }
   /* Bottom cushion (Jordan, 2026-11-20): matching breathing room
      below the game area in both orientations, so the board/pad
      never sits flush against the screen's bottom edge. Absorbed
@@ -579,9 +599,10 @@ text.cellnum.bad { fill: var(--error); }
 @media (min-width: 1024px) and (orientation: landscape) {
   header, .game, footer { max-width: 1460px; padding: 0 32px; }
   /* The shorthand above would flatten the vertical padding —
-     re-assert it: header top stays the normal tight 8px (no top
-     cushion on the play page), bottom cushion kept. */
-  header { padding-top: 8px; }
+     re-assert it: header top stays the normal tight 6px (no top
+     cushion on the play page) over the Batch 15 4px bottom, and
+     the game area's own bottom cushion is kept below. */
+  header { padding-top: 6px; padding-bottom: 4px; }
   .game { padding-bottom: 18px; }
   .game {
     display: grid;
@@ -632,32 +653,38 @@ text.cellnum.bad { fill: var(--error); }
    Win board space back from the chrome. The status row first
    floated as a compact centred strip over the board area's top
    letterbox; Jordan then asked for the stats up in the toolbar
-   row itself, between the mode switch and the size pill — so
-   placeHud() relocates #hud-stats into the toolbar on phone
-   (and back into the HUD row at ≥768px), compacted until EN and
-   FR both fit the row at 440px. What stays over the board's top
-   letterbox is only the transient furniture: the mistakes pill
-   and the game-message chip. Taps pass through that strip
-   except on the mistakes pill itself. */
+   row itself — so placeHud() relocates #hud-stats into the
+   toolbar on phone (and back into the HUD row at ≥768px).
+   Batch 15 (2026-11-21) finished the arrangement: the size pill
+   moved up into the header as a mini chip, and the stats ride
+   in the toolbar as chips with their icons back, right-aligned
+   as a group after the spacer — mode switch left, chips right,
+   mirroring the header's brand-left/actions-right logic. What
+   stays over the board's top letterbox is only the transient
+   furniture: the mistakes pill and the game-message chip. Taps
+   pass through that strip except on the mistakes pill itself. */
 @media (max-width: 767px) {
   /* Slimmer side margins: the game column (board included) uses
      nearly the full width; the header aligns to the same inset. */
   header, .game { padding-left: 8px; padding-right: 8px; }
   .game { position: relative; }
-  /* Stats in the toolbar row, centred in the gap by the spacer
-     after them. One line: nothing wraps and nothing shrinks
-     silently — the groups take their natural width and the
-     spacer absorbs what's left. The stats ride without their
-     icons at phone size (the values speak for themselves:
-     25/90, 59:59, 12), which is what makes EN and FR fit the
+  /* Stats in the toolbar row as chips (Batch 15): icons shown,
+     tabular numerals so the timer never jitters, the group
+     right-aligned after the spacer. One line: nothing wraps and
+     nothing shrinks silently — the groups take their natural
+     width and the spacer absorbs what's left. EN and FR fit the
      row in Free Play and Daily Race alike — measured with
-     worst-case labels; the ≥768px HUD keeps its icons. */
+     worst-case labels; the ≥768px HUD row is unchanged. */
   .toolbar { gap: 4px; flex-wrap: nowrap; }
-  .toolbar .mode-switch, .toolbar .pill { flex: none; }
-  .toolbar .mode-switch button, .toolbar .pill, .toolbar .hud-stat { white-space: nowrap; }
+  .toolbar .mode-switch { flex: none; }
+  .toolbar .mode-switch button, .toolbar .hud-stat { white-space: nowrap; }
   .toolbar .hud-stats { display: inline-flex; align-items: center; gap: 6px; flex: none; }
-  .toolbar .hud-stat { font-size: 12.5px; }
-  .toolbar .hud-stat svg { display: none; }
+  .toolbar .hud-stat {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 999px;
+    padding: 3px 9px; gap: 5px; font-size: 12.5px; font-variant-numeric: tabular-nums;
+    height: 34px; min-height: 34px;
+  }
+  .toolbar .hud-stat svg { display: block; width: 12px; height: 12px; }
   .hud {
     position: absolute; top: 44px; left: 8px; right: 8px; z-index: 4;
     align-items: center; pointer-events: none;
@@ -694,14 +721,22 @@ text.cellnum.bad { fill: var(--error); }
 }
 
 /* Narrow phones (≤430px, incl. the 360px Galaxy class): the
-   toolbar groups compact one step further so the stats still
-   share their line in both languages — measured with
-   worst-case labels in Free Play and Daily Race. */
+   toolbar groups and the header compact one step further (the
+   Batch 15 step-down tier: 11.5px, tighter padding) so the
+   stats still share their line and the header still fits in
+   both languages. The header's binding case is Daily Race,
+   whose date chip is the widest label it ever carries — the
+   last few pixels come from the header's own padding and gaps
+   and an 11px date chip. Measured with worst-case labels in
+   Free Play and Daily Race. */
 @media (max-width: 430px) {
-  .mode-switch button { font-size: 11px; padding: 4px 6px; }
-  .pill { font-size: 11.5px; padding: 4px 8px; }
+  header { padding-left: 6px; padding-right: 6px; }
+  header .brand { gap: 6px; }
+  .header-actions { gap: 6px; }
+  .mode-switch button { font-size: 11.5px; padding: 4px 8px; }
+  .pill { font-size: 11px; padding: 0 10px; }
   .toolbar .hud-stats { gap: 5px; }
-  .toolbar .hud-stat { font-size: 11.5px; }
+  .toolbar .hud-stat { font-size: 11.5px; padding: 3px 8px; gap: 4px; }
 }
 
 </style>
@@ -709,6 +744,7 @@ text.cellnum.bad { fill: var(--error); }
 <body>
 <header>
   <a class="brand" href="../" aria-label="Sixways home"><svg width="26" height="26" viewBox="0 0 40 40" aria-hidden="true"><g fill="#0E636B"><polygon points="20,3 25,6 25,12 20,15 15,12 15,6" fill="#CC520E"/><polygon points="20,17 25,20 25,26 20,29 15,26 15,20"/><polygon points="7,10 12,13 12,19 7,22 2,19 2,13" opacity=".55"/><polygon points="33,10 38,13 38,19 33,22 28,19 28,13" opacity=".55"/><polygon points="7,24 12,27 12,33 7,36 2,33 2,27" opacity=".3"/><polygon points="33,24 38,27 38,33 33,36 28,33 28,27" opacity=".3"/></g></svg><span>Sixways</span></a>
+  <button type="button" class="pill" id="pill-settings" aria-haspopup="dialog"><span id="pill-label">36 · Medium</span> <span class="chev">▾</span></button>
   <div class="header-actions">
     <button type="button" class="tool-btn" id="btn-howto" aria-label="How to play"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9.2"/><path d="M9.4 9.1a2.8 2.8 0 1 1 4.1 2.5c-.9.35-1.5 1-1.5 2v.4"/><circle cx="12" cy="17.2" r="0.7" fill="currentColor" stroke="none"/></svg><span id="howto-label">How to play</span><span class="dot" id="howto-dot"></span></button>
     <div class="menu-wrap">
@@ -740,7 +776,6 @@ text.cellnum.bad { fill: var(--error); }
     <button type="button" id="mode-daily" aria-pressed="false">Daily Race</button>
   </div>
   <span class="spacer"></span>
-  <button type="button" class="pill" id="pill-settings" aria-haspopup="dialog"><span id="pill-label">36 · Medium</span> <span class="chev">▾</span></button>
 </div>
 
 <!-- The clock is deliberately NOT inside a live region: the ticking
@@ -3077,27 +3112,27 @@ function positionZoomPill() {
    the rest, so 36 keeps its large keys and 60/90 compress to fit
    instead of overflowing the screen. */
 /* ---------- HUD placement ----------
-   On phone (<768px) the three stats live in the toolbar row,
-   between the mode switch and the size pill (Jordan,
-   2026-11-20); at ≥768px they sit back in the HUD row, where
-   display:contents on the wrapper keeps that row's layout
-   exactly as designed. One exception: Daily Race at ≤370px,
-   where the wide date pill leaves the stats on the letterbox
-   strip (see placeHud). The mistakes pill and the message
-   chip always stay in the HUD. */
+   On phone (<768px) the three stats live in the toolbar row as
+   chips, right-aligned as a group after the spacer — mode
+   switch left, chips right (Batch 15, Jordan 2026-11-21); at
+   ≥768px they sit back in the HUD row, where display:contents
+   on the wrapper keeps that row's layout exactly as designed.
+   The old Daily-at-≤370px exception is gone: it existed only
+   because the wide date pill shared the toolbar row, and the
+   pill now lives in the header. The mistakes pill and the
+   message chip always stay in the HUD. */
 var PHONE_MQ = window.matchMedia("(max-width: 767px)");
 function placeHud() {
   var stats = document.getElementById("hud-stats");
   var row = document.querySelector(".hud-row");
   var toolbar = document.querySelector(".toolbar");
   if (!stats || !row || !toolbar) return;
-  /* Daily Race's date pill is the widest thing the toolbar ever
-     carries: at ≤370px it, the mode switch and the stats cannot
-     share one line in either language (measured), so in that one
-     case the stats keep the letterbox strip over the board. */
-  var inToolbar = PHONE_MQ.matches && !(mode === "daily" && window.innerWidth <= 370);
+  var inToolbar = PHONE_MQ.matches;
   if (inToolbar) {
-    if (stats.parentNode !== toolbar) toolbar.insertBefore(stats, toolbar.querySelector(".spacer"));
+    if (stats.parentNode !== toolbar) {
+      var spacer = toolbar.querySelector(".spacer");
+      toolbar.insertBefore(stats, spacer ? spacer.nextSibling : null);
+    }
   } else if (stats.parentNode !== row) {
     row.insertBefore(stats, row.firstChild);
   }
