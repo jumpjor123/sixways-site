@@ -870,7 +870,7 @@ text.cellnum.bad { fill: var(--error); }
       </div>
       <div class="howto-card">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="14" r="3.5"/><path d="M12 3v3M5.5 5.5l2 2M18.5 5.5l-2 2"/></svg>
-        <div><strong id="howto-c3-t">Place &amp; edit.</strong><p id="howto-c3-p">Pick a number below, then tap a cell to place it. Tap a filled cell to select its number; tap it again — or use Erase — to clear it. Fixed numbers can't move.</p></div>
+        <div><strong id="howto-c3-t">Place &amp; edit.</strong><p id="howto-c3-p">Pick a number below, then tap a cell to place it. Tap a filled cell to select it — then tap a different number to replace it, or tap the cell again to clear it. Fixed numbers can't move.</p></div>
       </div>
       <div class="howto-card">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -959,6 +959,13 @@ var placed = new Map();
 var placedByNum = new Map();
 var selectedNum = 2;
 var selectedCell = -1;
+/* Batch 14: replace-arming. A deliberate tap on a filled cell arms
+   it (armedCell = that cell): the next pad tap on a different
+   number replaces its contents in one move (see onChipTap).
+   Arming is set ONLY by that tap — never by pad selection or by
+   the auto-advance after a placement — and every other action
+   disarms; refresh() also drops a stale arming as a backstop. */
+var armedCell = -1;
 var undoStack = [];
 var hintsUsed = 0;
 var won = false;
@@ -1081,7 +1088,7 @@ var STR = {
     "howtoC2T": "Follow the links.",
     "howtoC2P": "An orange ◆ on a border means those two cells must be consecutive.",
     "howtoC3T": "Place & edit.",
-    "howtoC3P": "Pick a number below, then tap a cell to place it. Tap a filled cell to select its number; tap it again — or use Erase — to clear it. Fixed numbers can't move.",
+    "howtoC3P": "Pick a number below, then tap a cell to place it. Tap a filled cell to select it — then tap a different number to replace it, or tap the cell again to clear it. Fixed numbers can't move.",
     "howtoC4T": "Difficulty.",
     "howtoC4P": "Easy and Medium highlight valid moves; Hard and Expert remove the guides.",
     "aboutTitle": "About Sixways (六道)",
@@ -1112,6 +1119,7 @@ var STR = {
     "padFixed": "{n} · Fixed",
     "padMove": "{n} · Tap cell to move",
     "padPlace": "{n} · Tap cell to place",
+    "padReplace": "Tap a number to replace {n} in this cell",
     "rangeAria": "Jump to numbers {s} to {e}",
     "coachMove": "Tap a highlighted cell to move {n}, or pick another number.",
     "coachPick": "Pick a number below, then tap a cell.",
@@ -1218,7 +1226,7 @@ var STR = {
     "howtoC2T": "Suis les liens.",
     "howtoC2P": "Un ◆ orange sur une frontière signifie que ces deux cases doivent être consécutives.",
     "howtoC3T": "Place et modifie.",
-    "howtoC3P": "Choisis un nombre ci-dessous, puis touche une case pour le placer. Touche une case remplie pour sélectionner son nombre ; touche-la de nouveau — ou utilise Effacer — pour la vider. Les nombres fixes ne bougent pas.",
+    "howtoC3P": "Choisis un nombre ci-dessous, puis touche une case pour le placer. Touche une case remplie pour la sélectionner — puis touche un autre nombre pour le remplacer, ou touche la case de nouveau pour la vider. Les nombres fixes ne bougent pas.",
     "howtoC4T": "Difficulté.",
     "howtoC4P": "Facile et Moyen mettent les coups valides en surbrillance ; Difficile et Expert retirent ces guides.",
     "aboutTitle": "À propos de Sixways (六道)",
@@ -1249,6 +1257,7 @@ var STR = {
     "padFixed": "{n} · Fixe",
     "padMove": "{n} · Touche une case pour déplacer",
     "padPlace": "{n} · Touche une case pour placer",
+    "padReplace": "Touchez un nombre pour remplacer {n} dans cette case",
     "rangeAria": "Aller aux nombres {s} à {e}",
     "coachMove": "Touche une case en surbrillance pour déplacer le {n}, ou choisis un autre nombre.",
     "coachPick": "Choisis un nombre ci-dessous, puis touche une case.",
@@ -1810,6 +1819,12 @@ function neighbourHints() {
 
 function refresh() {
   if (!G) return;
+  // Replace-arming backstop: the armed cell must still hold the
+  // selected number in an unwon game. Any path that moved the
+  // selection or the cell's contents without explicitly disarming
+  // (prev/next buttons, a hint, a restart…) leaves a stale arming
+  // that dies here, before the pad line can advertise it.
+  if (armedCell >= 0 && (won || !placed.has(armedCell) || selectedNum !== placed.get(armedCell))) armedCell = -1;
   syncPadRange();
   var bad = showErrors ? conflicts() : new Set();
   var hints = neighbourHints();
@@ -1884,7 +1899,9 @@ function refresh() {
   G.cells.forEach(function (c) { if (valueAt(c.id)) filled++; });
   document.getElementById("st-filled").textContent = filled + "/" + G.N;
   document.getElementById("st-hints").textContent = hintsUsed;
-  document.getElementById("pad-now").textContent = G.givenByNum.has(selectedNum)
+  document.getElementById("pad-now").textContent = armedCell >= 0
+    ? t("padReplace", { n: placed.get(armedCell) })
+    : G.givenByNum.has(selectedNum)
     ? t("padFixed", { n: selectedNum })
     : t(cellOfNum(selectedNum) >= 0 ? "padMove" : "padPlace", { n: selectedNum });
   document.getElementById("btn-undo").disabled = undoStack.length === 0;
@@ -1960,6 +1977,7 @@ function eraseCell(cell) {
   // pull numbers off a solved board.
   if (!G || won) return;
   if (G.givens.has(cell) || !placed.has(cell)) return;
+  armedCell = -1;
   snapshot(placed.get(cell));
   var num = placed.get(cell);
   placed.delete(cell); placedByNum.delete(num);
@@ -1972,13 +1990,20 @@ function eraseCell(cell) {
 function onCellTap(cell) {
   if (!G || won) return;
   if (G.givens.has(cell)) {
+    armedCell = -1;
     selectedNum = G.givens.get(cell); selectedCell = cell; refresh(); return;
   }
   var v = placed.get(cell);
   if (v !== undefined) {
     if (v === selectedNum) { eraseCell(cell); return; }
-    selectedNum = v; selectedCell = cell; refresh(); return;
+    // Deliberate tap on a filled cell: select its number AND arm
+    // the cell — the next pad tap on a different number replaces
+    // this cell's contents in one move (see onChipTap). This tap
+    // is the ONLY way to arm, so an auto-advanced or pad-picked
+    // selection can never trigger a surprise replace.
+    selectedNum = v; selectedCell = cell; armedCell = cell; refresh(); return;
   }
+  armedCell = -1;
   if (G.givenByNum.has(selectedNum)) {
     setMsg("msgFixed", { n: selectedNum }, true);
     return;
@@ -1987,6 +2012,28 @@ function onCellTap(cell) {
 }
 function onChipTap(num) {
   if (!G || won) return;
+  // Replace flow (Batch 14): a cell armed by a deliberate tap takes
+  // the tapped number through the normal place routine — one
+  // undoable snapshot, the normal mistake-charge rule, and if the
+  // number sat in another cell it moves, evicting the armed cell's
+  // old number back to unplaced. Two taps never fire it: the armed
+  // cell's OWN number is a plain re-selection, and a fixed given
+  // number is refused with the fixed message. ANY pad tap ends
+  // the arming, fired or not.
+  var armed = (armedCell >= 0 && placed.has(armedCell) && selectedNum === placed.get(armedCell)) ? armedCell : -1;
+  armedCell = -1;
+  if (armed >= 0 && num !== placed.get(armed)) {
+    if (G.givenByNum.has(num)) {
+      setMsg("msgFixed", { n: num }, true);
+      refresh();
+      scrollChipIntoView(num, "center");
+      return;
+    }
+    placeNum(num, armed, false);
+    scrollChipIntoView(num, "center");
+    if (hexEls[armed]) hexEls[armed].focus();
+    return;
+  }
   selectedNum = num;
   var c = cellOfNum(num);
   selectedCell = c;
@@ -2108,6 +2155,7 @@ function copyShareText(str, done) {
 }
 function showWin() {
   won = true;
+  armedCell = -1;
   if (mode === "free") clearFreeSession(); // a finished free game leaves nothing to restore
   freezeTimer(); // victory-screen time never enters the clock
   // Scoring (Phase 2, the app's rules exactly): par by size x
@@ -2210,7 +2258,7 @@ function commitPuzzle(puzzle) {
   committedDiff = puzzle.diff;
   computeLinkNbrs(G);
   placed = new Map(); placedByNum = new Map();
-  undoStack = []; hintsUsed = 0; mistakesCharged = 0; winRecord = null; won = false;
+  undoStack = []; hintsUsed = 0; mistakesCharged = 0; winRecord = null; won = false; armedCell = -1;
   resetTimer();
   hideWin();
   document.getElementById("btn-new").disabled = false;
@@ -2430,6 +2478,7 @@ function restoreDailyProgress(day) {
 function setMode(next) {
   if (mode === next) return;
   mode = next;
+  armedCell = -1;
   document.getElementById("mode-free").setAttribute("aria-pressed", next === "free" ? "true" : "false");
   document.getElementById("mode-daily").setAttribute("aria-pressed", next === "daily" ? "true" : "false");
   hideWin();
@@ -2833,6 +2882,7 @@ document.getElementById("btn-restart-confirm").addEventListener("click", functio
 });
 document.getElementById("btn-undo").addEventListener("click", function () {
   if (!undoStack.length || !G) return;
+  armedCell = -1;
   var parsed = JSON.parse(undoStack.pop());
   var prevEntries = Array.isArray(parsed) ? parsed : parsed.entries;
   var undoneNum = Array.isArray(parsed) ? null : parsed.undoneNum;
