@@ -978,8 +978,11 @@ var committedDiff = "medium";
 var hexEls = [], numEls = [], linkEls = {}, linkDotEls = {}, lineGroup = null, pipGroup = null, pulseGroup = null;
 // Generation bookkeeping
 var genSeq = 0, isGenerating = false, genTimeoutId = null, genWorker = null, queuedRestart = false;
-// Timer: elapsedAccum holds banked time; startedAt is the live segment.
-// Winning freezes the clock, so victory-screen time is never counted.
+// Timer: elapsedAccum holds banked time; startedAt is the live segment,
+// stamped on the monotonic performance.now() clock (never persisted —
+// only banked elapsed values are). Winning freezes the clock, so
+// victory-screen time is never counted, and time with the page in the
+// background is banked out by the suspension handler below.
 var elapsedAccum = 0, startedAt = null, timerId = null;
 var lastFocusBeforeWin = null;
 var zoomLevel = 1;
@@ -1537,7 +1540,7 @@ function restoreFreeSession() {
 }
 
 /* ---------- Timer helpers ---------- */
-function currentElapsedMs() { return elapsedAccum + (startedAt !== null ? Date.now() - startedAt : 0); }
+function currentElapsedMs() { return elapsedAccum + (startedAt !== null ? performance.now() - startedAt : 0); }
 function fmtTime(ms) {
   var s = Math.floor(ms / 1000);
   return Math.floor(s / 60) + ":" + ("0" + (s % 60)).slice(-2);
@@ -1546,7 +1549,7 @@ function renderTime() { document.getElementById("st-time").textContent = fmtTime
 function tick() { renderTime(); }
 function ensureTimerRunning() {
   if (won || startedAt !== null) return;
-  startedAt = Date.now();
+  startedAt = performance.now();
   if (!timerId) timerId = setInterval(tick, 500);
 }
 function freezeTimer() {
@@ -1566,6 +1569,32 @@ function resumeTimerFrom(ms) {
   renderTime();
   if (!won && (placed.size > 0 || ms > 0)) ensureTimerRunning();
 }
+
+/* Background suspension (mirrors the native GameSession clock):
+   when the page leaves the foreground — app switch, screen off, a
+   call — the live segment is banked and the clock stops, so time
+   away from the game never counts as playing time. The session is
+   saved at the same moment, so if the browser kills the background
+   page, a restore picks up the banked value rather than a stale
+   one. On return, the clock resumes only if it was running when
+   the page hid and the game is not won. */
+var clockSuspendedByHide = false;
+function suspendClockForHide() {
+  clockSuspendedByHide = false;
+  if (won || startedAt === null) return;
+  freezeTimer(); // banks the live segment into elapsedAccum
+  clockSuspendedByHide = true;
+  if (mode === "daily") saveDailyProgress(); else saveFreeProgress();
+}
+function resumeClockAfterShow() {
+  if (!clockSuspendedByHide) return;
+  clockSuspendedByHide = false;
+  if (!won) ensureTimerRunning();
+}
+document.addEventListener("visibilitychange", function () {
+  if (document.visibilityState === "hidden") suspendClockForHide();
+  else if (document.visibilityState === "visible") resumeClockAfterShow();
+});
 
 function hexPoints(cx, cy, size) {
   var pts = [];
