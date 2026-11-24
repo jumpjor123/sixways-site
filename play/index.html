@@ -3033,25 +3033,21 @@ document.getElementById("btn-again").addEventListener("click", function () {
    board SVG with computed styles baked in (its fills and strokes are
    class-driven, so a bare serialization would lose them), composed
    on the current theme's canvas colour with a slim footer: the
-   logo C mark plus the result line (buildShareText's first line).
+   app icon plus the result line (buildShareText's first line).
    The image therefore matches the theme the player is in. */
-var SHARE_LOGO_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">'
-  + '<polygon points="24,2.5 42.6,13.25 42.6,34.75 24,45.5 5.4,34.75 5.4,13.25" fill="#E4DAC6" stroke="#BFB5A0" stroke-width="1.6"/>'
-  + '<polygon points="24,8.2 38.7,16.1 38.7,31.9 24,39.8 9.3,31.9 9.3,16.1" fill="none" stroke="#BFB5A0" stroke-width="1.1"/>'
-  + '<g transform="translate(9.6 9.6) scale(0.72)"><g fill="#0E636B">'
-  + '<polygon points="20,3 25,6 25,12 20,15 15,12 15,6" fill="#CC520E"/>'
-  + '<polygon points="20,17 25,20 25,26 20,29 15,26 15,20"/>'
-  + '<polygon points="7,10 12,13 12,19 7,22 2,19 2,13" opacity=".55"/>'
-  + '<polygon points="33,10 38,13 38,19 33,22 28,19 28,13" opacity=".55"/>'
-  + '<polygon points="7,24 12,27 12,33 7,36 2,33 2,27" opacity=".3"/>'
-  + '<polygon points="33,24 38,27 38,33 33,36 28,33 28,27" opacity=".3"/>'
-  + '</g></g></svg>';
+/* The share card's logo is the current app icon — the same
+   data-URI PNG the header brand mark carries — so the card
+   always matches the shipped icon and can never drift back
+   to retired artwork. */
+function shareLogoSrc() {
+  var brand = document.querySelector("a.brand img");
+  return brand ? brand.getAttribute("src") : null;
+}
 function buildShareImageFile() {
   return new Promise(function (resolve) {
-    var boardUrl = null, logoUrl = null, settled = false;
+    var boardUrl = null, settled = false;
     function cleanup() {
       if (boardUrl) { try { URL.revokeObjectURL(boardUrl); } catch (e) {} boardUrl = null; }
-      if (logoUrl) { try { URL.revokeObjectURL(logoUrl); } catch (e) {} logoUrl = null; }
     }
     function fail() { if (!settled) { settled = true; cleanup(); resolve(null); } }
     try {
@@ -3091,7 +3087,7 @@ function buildShareImageFile() {
       var canvasBg = rootStyle.getPropertyValue("--canvas").trim() || "#F3EEE4";
       var ink = rootStyle.getPropertyValue("--ink").trim() || "#0B2E33";
       boardUrl = URL.createObjectURL(new Blob([svgStr], { type: "image/svg+xml;charset=utf-8" }));
-      logoUrl = URL.createObjectURL(new Blob([SHARE_LOGO_SVG], { type: "image/svg+xml;charset=utf-8" }));
+      var logoSrc = shareLogoSrc();
       var img = new Image(), logoImg = new Image(), loaded = 0;
       function onload() {
         if (settled || ++loaded < 2) return;
@@ -3103,7 +3099,14 @@ function buildShareImageFile() {
           ctx.fillRect(0, 0, W, H);
           ctx.drawImage(img, PAD, PAD, boardW, boardH);
           var fy = PAD + boardH + 36;
-          ctx.drawImage(logoImg, PAD, fy, 78, 78);
+          if (logoSrc) {
+            ctx.save();
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(PAD, fy, 78, 78, 17); else ctx.rect(PAD, fy, 78, 78);
+            ctx.clip();
+            ctx.drawImage(logoImg, PAD, fy, 78, 78);
+            ctx.restore();
+          }
           var line = (buildShareText() || "Sixways").split("\n")[0];
           ctx.fillStyle = ink;
           var size = 40;
@@ -3127,11 +3130,15 @@ function buildShareImageFile() {
         } catch (e) { fail(); }
       }
       img.onload = onload;
-      logoImg.onload = onload;
       img.onerror = fail;
-      logoImg.onerror = fail;
       img.src = boardUrl;
-      logoImg.src = logoUrl;
+      if (logoSrc) {
+        logoImg.onload = onload;
+        logoImg.onerror = fail;
+        logoImg.src = logoSrc;
+      } else {
+        onload();
+      }
     } catch (e) { fail(); }
   });
 }
