@@ -766,6 +766,20 @@ text.cellnum.bad { fill: var(--error); }
     border: 1px solid var(--border); border-radius: 999px;
     padding: 1px 12px; font-size: 13px;
   }
+  /* But a floating chip still COVERS the board whenever the
+     board is height-constrained and its top row reaches the
+     wrap's top — the letterbox the strip was designed to sit in
+     is not always there (the French daily banner, three lines
+     on a phone, sat on the top row). So while the strip carries
+     anything visible — a game message or the mistakes pill —
+     it leaves the overlay and takes its height in flow: the
+     board flexes smaller by exactly the strip's height and
+     every cell stays visible (the pill-reserve principle).
+     Empty, it keeps floating at zero height, as before. */
+  .game:has(.hud-msg:not(:empty)) .hud,
+  .game:has(#mistakes-pill.show) .hud {
+    position: static;
+  }
   /* The generating / backup-puzzle overlays own the board's top
      centre while they are up — the overlay strip steps aside. */
   .game:has(#board-status.show) .hud-row,
