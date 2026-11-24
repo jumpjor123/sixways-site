@@ -44,6 +44,9 @@
   --hex-filled: #EFE7D3;
   --hex-candidate: rgba(14, 99, 107, 0.10);
   --hex-stroke: #BFB5A0;
+  --hex-hole: #F3EEE4;
+  --hex-hole-dot: #C4B28F;
+  --hex-hole-shadow: 0.10;
   --link: #CC520E;
   --link-soft: #D9825F;
   --link-ok: #0E636B;
@@ -74,6 +77,9 @@
     --hex-filled: #17393F;
     --hex-candidate: rgba(94, 200, 210, 0.13);
     --hex-stroke: #3D6B70;
+    --hex-hole: #0A2B2F;
+    --hex-hole-dot: #F5EFE4;
+    --hex-hole-shadow: 0.35;
     --link: #F0854C;
     --link-soft: #E59A78;
     --link-ok: #4FB3BC;
@@ -306,6 +312,9 @@ svg#board {
 .hex.given { fill: var(--hex-given); }
 .hex.filled { fill: var(--hex-filled); }
 .givenring { fill: none; stroke: var(--hex-stroke); stroke-width: 1; pointer-events: none; }
+.holehex { fill: var(--hex-hole); pointer-events: none; }
+.holeshadow { fill: none; stroke: #000; stroke-opacity: var(--hex-hole-shadow); stroke-width: 3; pointer-events: none; }
+.holedot { fill: var(--hex-hole-dot); pointer-events: none; }
 .hex.neighbor { fill: var(--hex-candidate); stroke: #6E9A9D; stroke-width: 1.4; stroke-dasharray: none; }
 .hex.selected { stroke: var(--orange); stroke-width: 3; stroke-dasharray: none; }
 .hex.bad { fill: var(--error-surface); stroke: var(--error); }
@@ -1990,6 +1999,60 @@ function buildBoard() {
 
   lineGroup = document.createElementNS(SVGNS, "g");
   svg.appendChild(lineGroup);
+
+  // The removed centre cell, drawn as a hole (mirrors the native
+  // board, Batch 19): a hexagon one step darker than the stage
+  // surface with a soft inner shadow and a single cream dot —
+  // and deliberately NO outline, so it never reads as a cell
+  // that can be played. The grid excludes (0, 0) on every board
+  // size, so the hole sits at the layout origin through the same
+  // transform every cell takes: above the path lines, under the
+  // cells, zooming with the board. It is not a cell: no tap
+  // handler and no accessibility element.
+  (function () {
+    var hp = hexPoints(0, 0, size * 0.94);
+    var defs = document.createElementNS(SVGNS, "defs");
+    var filt = document.createElementNS(SVGNS, "filter");
+    filt.setAttribute("id", "holeblur");
+    filt.setAttribute("x", "-20%"); filt.setAttribute("y", "-20%");
+    filt.setAttribute("width", "140%"); filt.setAttribute("height", "140%");
+    var blur = document.createElementNS(SVGNS, "feGaussianBlur");
+    blur.setAttribute("stdDeviation", "1");
+    filt.appendChild(blur);
+    defs.appendChild(filt);
+    var clip = document.createElementNS(SVGNS, "clipPath");
+    clip.setAttribute("id", "holeclip");
+    var clipHex = document.createElementNS(SVGNS, "polygon");
+    clipHex.setAttribute("points", hp);
+    clip.appendChild(clipHex);
+    defs.appendChild(clip);
+    svg.appendChild(defs);
+
+    var holeG = document.createElementNS(SVGNS, "g");
+    holeG.setAttribute("aria-hidden", "true");
+    var base = document.createElementNS(SVGNS, "polygon");
+    base.setAttribute("points", hp);
+    base.setAttribute("class", "holehex");
+    holeG.appendChild(base);
+    // Inner shadow: a blurred dark stroke clipped to the
+    // hexagon's interior — only the soft inner edge darkens,
+    // which reads as depth, never as an outline (there is no
+    // stroke ON the edge).
+    var clipG = document.createElementNS(SVGNS, "g");
+    clipG.setAttribute("clip-path", "url(#holeclip)");
+    var shadow = document.createElementNS(SVGNS, "polygon");
+    shadow.setAttribute("points", hp);
+    shadow.setAttribute("class", "holeshadow");
+    shadow.setAttribute("filter", "url(#holeblur)");
+    clipG.appendChild(shadow);
+    holeG.appendChild(clipG);
+    var dot = document.createElementNS(SVGNS, "circle");
+    dot.setAttribute("cx", 0); dot.setAttribute("cy", 0);
+    dot.setAttribute("r", 2.75);
+    dot.setAttribute("class", "holedot");
+    holeG.appendChild(dot);
+    svg.appendChild(holeG);
+  })();
 
   G.cells.forEach(function (c) {
     var p = document.createElementNS(SVGNS, "polygon");
