@@ -489,6 +489,19 @@ text.cellnum.bad { fill: var(--error); }
 .coach.invite .invite-no { color: var(--ink-soft); }
 .coach.invite .invite-no:hover { color: var(--ink); }
 
+#guide .guide-done {
+  width: auto; height: auto; min-height: 32px; padding: 0 12px; font-weight: 700;
+  background: var(--teal); color: var(--surface); border-radius: 999px;
+}
+#guide .guide-done:hover { background: #0A4E54; }
+.dir-toggle {
+  margin-left: 6px; padding: 4px 10px; border: 1px solid var(--border);
+  border-radius: 999px; background: var(--surface); color: var(--ink-soft);
+  font-weight: 700; font-size: 13px; cursor: pointer; white-space: nowrap; flex: none;
+}
+.dir-toggle:hover { color: var(--ink); }
+.stepper.primary { color: var(--teal); font-weight: 800; }
+
 /* Number pad tray */
 .pad-head { display: flex; align-items: center; gap: 6px; min-height: 26px; }
 .stepper {
@@ -694,7 +707,7 @@ text.cellnum.bad { fill: var(--error); }
     grid-template-rows: 1fr auto auto auto auto auto 1fr;
     column-gap: 28px; row-gap: 18px;
   }
-  .game:not(:has(> #tutorial-invite.show, > #coach.show)) {
+  .game:not(:has(> #tutorial-invite.show, > #coach.show, > #guide.show)) {
     grid-template-rows: 1fr auto auto auto auto 1fr;
   }
   .board-wrap { grid-column: 1; grid-row: 1 / -1; min-height: 0; }
@@ -709,8 +722,9 @@ text.cellnum.bad { fill: var(--error); }
   .actions { grid-column: 2; grid-row: 4; }
   #tutorial-invite { grid-column: 2; grid-row: 5; }
   #coach { grid-column: 2; grid-row: 5; }
+  #guide { grid-column: 2; grid-row: 5; }
   .pad-tray { grid-column: 2; grid-row: 6; }
-  .game:not(:has(> #tutorial-invite.show, > #coach.show)) .pad-tray { grid-row: 5; }
+  .game:not(:has(> #tutorial-invite.show, > #coach.show, > #guide.show)) .pad-tray { grid-row: 5; }
   #pad { grid-template-columns: repeat(6, 1fr); gap: 8px; }
   /* Big boards in landscape (range pills present = N > 36): 10
      across, so the pad is 6 rows at 60 and 9 rows at 90 instead of
@@ -924,7 +938,7 @@ text.cellnum.bad { fill: var(--error); }
     column-gap: 14px; row-gap: 8px;
     padding-bottom: 8px;
   }
-  .game:has(> #tutorial-invite.show, > #coach.show) {
+  .game:has(> #tutorial-invite.show, > #coach.show, > #guide.show) {
     grid-template-rows: auto auto auto auto 1fr;
   }
   .board-wrap { grid-column: 1; grid-row: 1 / -1; min-height: 0; }
@@ -934,15 +948,15 @@ text.cellnum.bad { fill: var(--error); }
   .hud { grid-column: 2; grid-row: 2; position: static; }
   .actions { grid-column: 2; grid-row: 3; gap: 6px; }
   .action-btn { min-height: 36px; font-size: 12.5px; padding-left: 4px; padding-right: 4px; }
-  #tutorial-invite, #coach { grid-column: 2; grid-row: 4; }
+  #tutorial-invite, #coach, #guide { grid-column: 2; grid-row: 4; }
   .pad-tray { grid-column: 2; grid-row: 4; align-self: end; min-height: 0; }
-  .game:has(> #tutorial-invite.show, > #coach.show) .pad-tray { grid-row: 5; }
+  .game:has(> #tutorial-invite.show, > #coach.show, > #guide.show) .pad-tray { grid-row: 5; }
   #pad { grid-template-columns: repeat(6, 1fr); gap: 5px; }
   .chip { height: 30px; min-height: 30px; font-size: 13.5px; }
   /* With the invite/coach bar in the column the budget breaks: the
      pad steps down so the bar never sits under the tray. */
-  .game:has(> #tutorial-invite.show, > #coach.show) { row-gap: 6px; }
-  .game:has(> #tutorial-invite.show, > #coach.show) .chip { height: 26px; min-height: 26px; }
+  .game:has(> #tutorial-invite.show, > #coach.show, > #guide.show) { row-gap: 6px; }
+  .game:has(> #tutorial-invite.show, > #coach.show, > #guide.show) .chip { height: 26px; min-height: 26px; }
   .pad-head { min-height: 24px; }
   .pad-now { font-size: 12.5px; }
   .range-pill { padding: 3px 6px; font-size: 11.5px; }
@@ -1082,11 +1096,19 @@ text.cellnum.bad { fill: var(--error); }
   <button type="button" id="btn-coach-close" aria-label="Dismiss tip">✕</button>
 </div>
 
+<div class="coach" id="guide">
+  <span id="guide-text"></span>
+  <span class="spacer"></span>
+  <button type="button" class="guide-done" id="btn-guide-done" style="display:none">Got it</button>
+  <button type="button" id="btn-guide-skip" aria-label="Skip the guide">✕</button>
+</div>
+
 <div class="pad-tray">
   <div class="pad-head">
     <button type="button" class="stepper" id="btn-prev-num" aria-label="Previous number">‹</button>
     <span class="pad-now" id="pad-now"></span>
     <button type="button" class="stepper" id="btn-next-num" aria-label="Next unplaced number">›</button>
+    <button type="button" class="dir-toggle" id="btn-dir" aria-label="Working forward from 1 — tap to work backwards">1 → 36</button>
     <span class="spacer"></span>
     <span id="range-pills" style="display:flex;gap:6px"></span>
   </div>
@@ -1143,6 +1165,10 @@ text.cellnum.bad { fill: var(--error); }
       <div class="howto-card">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="14" r="3.5"/><path d="M12 3v3M5.5 5.5l2 2M18.5 5.5l-2 2"/></svg>
         <div><strong id="howto-c3-t">Place &amp; edit.</strong><p id="howto-c3-p">Pick a number below, then tap a cell to place it. Tap a filled cell to select it — then tap a different number to replace it, or tap the cell again to clear it. Fixed numbers can't move.</p></div>
+      </div>
+      <div class="howto-card">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+        <div><strong id="howto-c5-t">Undo, Erase, Clear All.</strong><p id="howto-c5-p">Undo is always free and refunds any points the move cost. Erase clears the selected cell. Clear All empties the board but keeps the printed numbers. Stuck? Hint places one correct number for you.</p></div>
       </div>
       <div class="howto-card">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -1252,7 +1278,34 @@ var mistakesCharged = 0;
 var winRecord = null;        // this board's recorded result (once per board)
 // Desired (UI) settings vs committed settings: the committed pair only
 // changes when a new board actually arrives, atomically with it.
-var desiredSide = 4, desiredDiff = "medium";
+/* Zero-completed-puzzle players start on Easy (item: gentle
+   default, mirroring the app): the signal is the completed
+   counter, with pre-counter players recognised by any standing
+   best score or daily result. Restored sessions keep their own
+   difficulty — this only seeds the desired default. */
+function hasCompletedPuzzle() {
+  if ((+lsGet("sixways.completed") || 0) > 0) return true;
+  try {
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k && k.indexOf("sixways.best.") === 0) return true;
+    }
+  } catch (e) { /* storage unavailable */ }
+  var h = loadDailyHistory();
+  return !!(h && h.results && Object.keys(h.results).length);
+}
+function noteCompletedPuzzle() {
+  var c = +lsGet("sixways.completed") || 0;
+  lsSet("sixways.completed", String(c + 1));
+}
+var desiredSide = 4, desiredDiff = hasCompletedPuzzle() ? "medium" : "easy";
+/* Working direction (tester feedback: descending from a high
+   given was click-heavy): false = forward (default), true =
+   backward. Per game session, persisted with the free session;
+   new games start forward; locked forward in the Daily Race
+   and during the guided starter. */
+var workBackward = false;
+function backwardEffective() { return workBackward && mode === "free" && !guideActive; }
 var committedDiff = "medium";
 var hexEls = [], numEls = [], linkEls = {}, linkDotEls = {}, lineGroup = null, pipGroup = null, pulseGroup = null;
 // Generation bookkeeping
@@ -1365,7 +1418,9 @@ var STR = {
     "howtoC3T": "Place & edit.",
     "howtoC3P": "Pick a number below, then tap a cell to place it. Tap a filled cell to select it — then tap a different number to replace it, or tap the cell again to clear it. Fixed numbers can't move.",
     "howtoC4T": "Difficulty.",
-    "howtoC4P": "Easy and Medium highlight valid moves; Hard and Expert remove the guides.",
+    "howtoC4P": "Easy and Medium highlight valid moves — for an unplaced number, an empty hex that isn't glowing can't take it without breaking the chain. Hard and Expert remove the guides.",
+    "howtoC5T": "Undo, Erase, Clear All.",
+    "howtoC5P": "Undo is always free and refunds any points the move cost. Erase clears the selected cell. Clear All empties the board but keeps the printed numbers. Stuck? Hint places one correct number for you.",
     "aboutTitle": "About Sixways (六道)",
     "aboutText": "Named for the six directions of a honeycomb and inspired by the ClasseTICE number-labyrinth puzzle. Every puzzle is verified to have a single unique solution — generated fresh, or served from a preverified backup when generation runs long.",
     "restartTitle": "Restart this puzzle?",
@@ -1397,7 +1452,28 @@ var STR = {
     "padReplace": "Tap a number to replace {n} in this cell",
     "rangeAria": "Jump to numbers {s} to {e}",
     "coachMove": "Tap a highlighted cell to move {n}, or pick another number.",
-    "coachPick": "Pick a number below, then tap a cell.",
+    "coachPick": "One rule: consecutive numbers must touch. Pick a number below, then tap a cell.",
+    "guideIntro": "Consecutive numbers must touch. {lo} and {hi} are printed, and only one hex touches both — so {n} goes there. Tap {n} below.",
+    "guideTap": "Consecutive numbers must touch — so {n} belongs in the one empty hex touching both {lo} and {hi}. Tap that hex.",
+    "guideWrong": "Not there — {n} has to touch both {lo} and {hi}. Undo is free: take it back and look for the one hex that touches both.",
+    "guideWrongBlocked": "Not there — the hex for {n} is taken, and {n} has to touch both {lo} and {hi}. Clear it (Undo is free) and look for the one hex that touches both.",
+    "guideLinkIntro": "Now the diamonds ◆: linked hexes hold numbers 1 apart. The hex linked to {known} must be {other} or {target} — {other} is already on the board. Pick {target}.",
+    "guideLinkTap": "Tap the hex linked ◆ to {known}.",
+    "guideLinkError": "Not there — clear the wrong hex (Undo is free), pick {n} again, and tap the hex linked ◆ to {known}.",
+    "guideLinkBlocked": "Not there — the hex linked ◆ to {known} is already taken. Clear it first (Undo is free); if {n} is down somewhere wrong, clear that too. Then pick {n} and tap the linked hex.",
+    "guideGlowIntro": "Last tool: the glow. Pick {n} — only one hex glows for it, so that's the move.",
+    "guideGlowTap": "Only one hex glows for {n} — tap it.",
+    "guideGlowError": "Not there — clear the wrong hex first (Undo is free), then pick {n} again and tap the one hex that glows for it.",
+    "guideGlowBlocked": "Not there — the hex for {n} is already taken. Clear it first (Undo is free); if {n} is down somewhere wrong, clear that too. Then pick {n} — only one hex will glow for it.",
+    "guideDone": "Exactly — every move is a deduction like that. The rest of this puzzle is yours.",
+    "guideGotIt": "Got it",
+    "guideSkip": "Skip the guide",
+    "hintBetween": "Hint: {n} must touch both {lo} and {hi} — only one hex can still take it.",
+    "hintLink": "Hint: this hex is linked ◆ to {v}, so it's {lo} or {hi} — {o} is already placed.",
+    "hintLinkSolo": "Hint: this hex is linked ◆ to {v}, so it must be {o}.",
+    "hintSingle": "Hint: only one hex can still take {n}.",
+    "dirForwardAria": "Working forward from 1 — tap to work backwards",
+    "dirBackwardAria": "Working backwards from {n} — tap to work forwards",
     "msgRestored": "Welcome back — your game was restored.",
     "msgFixed": "{n} is fixed. Choose another number.",
     "msgSolved": "Solved!",
@@ -1513,7 +1589,9 @@ var STR = {
     "howtoC3T": "Place et modifie.",
     "howtoC3P": "Choisis un nombre ci-dessous, puis touche une case pour le placer. Touche une case remplie pour la sélectionner — puis touche un autre nombre pour le remplacer, ou touche la case de nouveau pour la vider. Les nombres fixes ne bougent pas.",
     "howtoC4T": "Difficulté.",
-    "howtoC4P": "Facile et Moyen mettent les coups valides en surbrillance ; Difficile et Expert retirent ces guides.",
+    "howtoC4P": "Facile et Moyen mettent les coups valides en surbrillance — pour un nombre pas encore placé, une case vide qui ne brille pas ne peut pas le recevoir sans briser la chaîne. Difficile et Expert retirent ces guides.",
+    "howtoC5T": "Annuler, Effacer, Tout effacer.",
+    "howtoC5P": "Annuler est toujours gratuit et rend les points du coup. Effacer vide la case sélectionnée. Tout effacer vide le plateau mais garde les nombres imprimés. Bloqué ? Indice place un nombre correct pour toi.",
     "aboutTitle": "À propos de Sixways (六道)",
     "aboutText": "Le nom vient des six directions d'un nid d'abeilles ; le jeu s'inspire du labyrinthe de nombres de ClasseTICE. Chaque puzzle est vérifié : une seule solution unique — généré à la demande, ou servi depuis une réserve prévérifiée quand la génération prend trop de temps.",
     "restartTitle": "Recommencer ce puzzle ?",
@@ -1545,7 +1623,28 @@ var STR = {
     "padReplace": "Touche un nombre pour remplacer {n} dans cette case",
     "rangeAria": "Aller aux nombres {s} à {e}",
     "coachMove": "Touche une case en surbrillance pour déplacer le {n}, ou choisis un autre nombre.",
-    "coachPick": "Choisis un nombre ci-dessous, puis touche une case.",
+    "coachPick": "Une seule règle : les nombres consécutifs doivent se toucher. Choisis un nombre en bas, puis touche une case.",
+    "guideIntro": "Les nombres consécutifs doivent se toucher. {lo} et {hi} sont imprimés, et un seul hexagone touche les deux — {n} va donc là. Touche {n} en bas.",
+    "guideTap": "Les nombres consécutifs doivent se toucher — {n} va donc dans le seul hexagone vide qui touche à la fois {lo} et {hi}. Touche cet hexagone.",
+    "guideWrong": "Pas là — le {n} doit toucher à la fois le {lo} et le {hi}. Annuler est gratuit : reprends-le et cherche l'unique hexagone qui touche les deux.",
+    "guideWrongBlocked": "Pas là — la case du {n} est prise, et le {n} doit toucher à la fois le {lo} et le {hi}. Vide-la (Annuler est gratuit) et cherche l'unique hexagone qui touche les deux.",
+    "guideLinkIntro": "Maintenant les losanges ◆ : les hexagones liés contiennent des nombres à 1 d'écart. L'hexagone lié au {known} vaut {other} ou {target} — le {other} est déjà là. Choisis le {target}.",
+    "guideLinkTap": "Touche l'hexagone lié ◆ au {known}.",
+    "guideLinkError": "Pas là — vide la mauvaise case (Annuler est gratuit), choisis le {n} à nouveau, et touche l'hexagone lié ◆ au {known}.",
+    "guideLinkBlocked": "Pas là — l'hexagone lié ◆ au {known} est déjà pris. Vide-le d'abord (Annuler est gratuit) ; si le {n} est placé au mauvais endroit, retire-le aussi. Puis choisis le {n} et touche l'hexagone lié.",
+    "guideGlowIntro": "Dernier outil : la lueur. Choisis le {n} — un seul hexagone s'illumine pour lui, donc c'est le coup à jouer.",
+    "guideGlowTap": "Un seul hexagone s'illumine pour le {n} — touche-le.",
+    "guideGlowError": "Pas là — vide d'abord la mauvaise case (Annuler est gratuit), puis choisis le {n} à nouveau et touche l'unique hexagone qui s'illumine pour lui.",
+    "guideGlowBlocked": "Pas là — la case du {n} est déjà prise. Vide-la d'abord (Annuler est gratuit) ; si le {n} est placé au mauvais endroit, retire-le aussi. Puis choisis le {n} — un seul hexagone s'illuminera pour lui.",
+    "guideDone": "Exactement — chaque coup est une déduction comme celle-là. Le reste du puzzle est à toi.",
+    "guideGotIt": "Compris",
+    "guideSkip": "Passer le guide",
+    "hintBetween": "Indice : le {n} doit toucher à la fois le {lo} et le {hi} — un seul hexagone peut encore le recevoir.",
+    "hintLink": "Indice : cette case est liée ◆ au {v}, donc elle vaut {lo} ou {hi} — le {o} est déjà placé.",
+    "hintLinkSolo": "Indice : cette case est liée ◆ au {v}, donc elle vaut forcément {o}.",
+    "hintSingle": "Indice : un seul hexagone peut encore recevoir le {n}.",
+    "dirForwardAria": "Sens normal depuis le 1 — toucher pour travailler à rebours",
+    "dirBackwardAria": "À rebours depuis le {n} — toucher pour travailler vers l'avant",
     "msgRestored": "Bon retour — ta partie a été restaurée.",
     "msgFixed": "Le {n} est fixe. Choisis un autre nombre.",
     "msgSolved": "Résolu !",
@@ -1685,6 +1784,8 @@ function applyLanguage() {
   document.getElementById("btn-tutorial-yes").textContent = t("inviteYes");
   document.getElementById("btn-tutorial-no").textContent = t("inviteNo");
   document.getElementById("btn-coach-close").setAttribute("aria-label", t("dismissTip"));
+  document.getElementById("btn-guide-done").textContent = t("guideGotIt");
+  document.getElementById("btn-guide-skip").setAttribute("aria-label", t("guideSkip"));
   /* Pad tray */
   document.getElementById("btn-prev-num").setAttribute("aria-label", t("prevNum"));
   document.getElementById("btn-next-num").setAttribute("aria-label", t("nextNum"));
@@ -1702,7 +1803,7 @@ function applyLanguage() {
   document.getElementById("btn-start").textContent = t("startPuzzle");
   /* How to Play sheet */
   document.getElementById("howto-title").textContent = t("howtoTitle");
-  for (var ci = 1; ci <= 4; ci++) {
+  for (var ci = 1; ci <= 5; ci++) {
     document.getElementById("howto-c" + ci + "-t").textContent = t("howtoC" + ci + "T");
     document.getElementById("howto-c" + ci + "-p").textContent = t("howtoC" + ci + "P");
   }
@@ -1827,7 +1928,8 @@ function saveFreeProgress() {
     hintsUsed: hintsUsed,
     mistakesCharged: mistakesCharged,
     elapsedMs: currentElapsedMs(),
-    undoStack: undoStack.slice()
+    undoStack: undoStack.slice(),
+    backward: workBackward
   }));
 }
 function loadFreeSession() {
@@ -1850,6 +1952,8 @@ function restoreFreeSession() {
   placed.forEach(function (num, cell) { placedByNum.set(num, cell); });
   hintsUsed = s.hintsUsed || 0;
   mistakesCharged = s.mistakesCharged || 0;
+  workBackward = !!s.backward;
+  guideActive = isStarterPuzzle(G) && lsGet("sixways.guide.done") !== "1";
   undoStack = (s.undoStack || []).slice();
   selectedNum = firstUnplacedNum();
   selectedCell = -1;
@@ -2378,9 +2482,23 @@ function placeNum(num, cell, isHint) {
   saveDailyProgress();
 }
 function advanceSelection(from) {
+  if (backwardEffective()) {
+    // Mirror image of the forward rule: descend to the next
+    // lower unplaced number, wrap to the highest unplaced,
+    // else stay.
+    for (var d = from - 1; d >= 1; d--) if (cellOfNum(d) === -1) { selectedNum = d; return; }
+    for (var u = G.N; u > from; u--) if (cellOfNum(u) === -1) { selectedNum = u; return; }
+    selectedNum = from;
+    return;
+  }
   for (var n = from + 1; n <= G.N; n++) if (cellOfNum(n) === -1) { selectedNum = n; return; }
   for (var m = 1; m < from; m++) if (cellOfNum(m) === -1) { selectedNum = m; return; }
   selectedNum = from;
+}
+function prevUnplacedNum(from) {
+  if (!G) return -1;
+  for (var n = from - 1; n >= 1; n--) if (cellOfNum(n) === -1) return n;
+  return -1;
 }
 function eraseCell(cell) {
   // The victory state is locked: Erase / Delete / Backspace must not
@@ -2589,6 +2707,7 @@ function copyShareText(str, done) {
 function showWin() {
   won = true;
   armedCell = -1;
+  if (guideActive) completeGuide();
   if (mode === "free") clearFreeSession(); // a finished free game leaves nothing to restore
   freezeTimer(); // victory-screen time never enters the clock
   // Scoring (Phase 2, the app's rules exactly): par by size x
@@ -2616,6 +2735,7 @@ function showWin() {
       history = recordingDaily(history, { day: dailyDay, elapsed: elapsedSec, score: score, hintsUsed: hintsUsed });
       saveDailyHistory(history);
       winRecord = history.results[dailyDay];
+      noteCompletedPuzzle();
     }
     saveDailyProgress();
   } else if (!winUnranked) {
@@ -2631,6 +2751,7 @@ function showWin() {
       if (isNewBestTime) lsSet("sixways.besttime." + G.N + "." + G.diff, String(elapsedSec));
       winRecord = { score: score, best: isNewBest ? score : prevBest, isNewBest: isNewBest,
         bestTime: isNewBestTime ? elapsedSec : prevBestTime, isNewBestTime: isNewBestTime };
+      noteCompletedPuzzle();
     }
   }
   renderWinText();
@@ -2695,6 +2816,7 @@ function materializePuzzle(d) {
 function commitPuzzle(puzzle) {
   // Board + settings commit together, here and nowhere else.
   G = puzzle;
+  workBackward = false; // a new game starts forward; restores re-apply their saved direction after commit
   committedDiff = puzzle.diff;
   computeLinkNbrs(G);
   placed = new Map(); placedByNum = new Map();
@@ -2934,7 +3056,7 @@ function setMode(next) {
     startDaily();
   } else {
     dailyDay = null;
-    if (!restoreFreeSession()) newGame();
+    if (!restoreFreeSession() && !restoreBankedGame()) newGame();
   }
   placeHud();
 }
@@ -2958,6 +3080,128 @@ var rangePillsFor = 0, coachDismissed = false, menuOpen = false;
 var tutorialChoice = null;
 try { tutorialChoice = localStorage.getItem("sixways-tutorial"); } catch (e) { /* storage unavailable */ }
 var coachOn = tutorialChoice === "on";
+
+/* ---------- Guided starter (the app's baked board, ported) ----------
+   The same 36-cell Easy starter as the app: same givens, same
+   link diamonds, same bundled path, unranked. The guide teaches
+   three deductions in order — between-givens (2), link-forced
+   (20), candidate glow (17) — each with an error state, exactly
+   as the app's guide pill derives them. Opt-in architecture is
+   unchanged: the invite and the menu entry are the only doors,
+   the stored choice is respected, and guidance follows the
+   starter session, never a stored board alone. */
+var STARTER_GIVENS = [[0, 4], [1, 3], [3, 1], [8, 9], [9, 18], [11, 16], [15, 19], [25, 36], [28, 25], [35, 31]];
+var STARTER_LINKS = ["2-3", "6-7", "8-14", "10-11", "11-12", "14-20", "15-16", "17-22", "18-24", "21-27", "30-31"];
+var GUIDE_TARGETS = [2, 20, 17];
+var guideActive = false;
+
+function buildStarterPuzzle() {
+  var cells = buildGrid(4);
+  var path = BUNDLED_PATHS[4];
+  var solution = new Map(), solByNum = new Array(37);
+  path.forEach(function (cell, i) { solution.set(cell, i + 1); solByNum[i + 1] = cell; });
+  var givens = new Map(STARTER_GIVENS), givenByNum = new Map();
+  givens.forEach(function (n, c) { givenByNum.set(n, c); });
+  return { cells: cells, N: 36, solution: solution, solByNum: solByNum,
+    givens: givens, givenByNum: givenByNum, links: new Set(STARTER_LINKS),
+    side: 4, diff: "easy", fallback: false, unranked: true };
+}
+function isStarterPuzzle(p) {
+  if (!p || p.side !== 4 || p.diff !== "easy" || !p.unranked) return false;
+  if (p.givens.size !== STARTER_GIVENS.length || p.links.size !== STARTER_LINKS.length) return false;
+  for (var i = 0; i < STARTER_GIVENS.length; i++) {
+    if (p.givens.get(STARTER_GIVENS[i][0]) !== STARTER_GIVENS[i][1]) return false;
+  }
+  for (var j = 0; j < STARTER_LINKS.length; j++) if (!p.links.has(STARTER_LINKS[j])) return false;
+  return true;
+}
+/* Starting the starter must never eat a game in progress (the
+   app's banking rule): the current free session's saved state
+   is set aside and restored on a later visit when no live
+   session exists. */
+function bankCurrentFreeGame() {
+  if (mode !== "free" || !G || isStarterPuzzle(G)) return;
+  var raw = lsGet(FREE_SESSION_KEY);
+  if (raw) lsSet("sixways.free.banked", raw);
+}
+function restoreBankedGame() {
+  var raw = lsGet("sixways.free.banked");
+  if (!raw) return false;
+  lsSet(FREE_SESSION_KEY, raw);
+  try { localStorage.removeItem("sixways.free.banked"); } catch (e) { /* storage unavailable */ }
+  return restoreFreeSession();
+}
+function startGuidedStarter() {
+  bankCurrentFreeGame();
+  if (mode !== "free") {
+    mode = "free"; dailyDay = null;
+    document.getElementById("mode-free").setAttribute("aria-pressed", "true");
+    document.getElementById("mode-daily").setAttribute("aria-pressed", "false");
+  }
+  // Supersede any in-flight generation: its reply is discarded
+  // by the request-id check, and its watchdog is cleared here.
+  genSeq++;
+  if (genTimeoutId) { clearTimeout(genTimeoutId); genTimeoutId = null; }
+  isGenerating = false;
+  hideWin();
+  guideActive = true;
+  commitPuzzle(buildStarterPuzzle()); // commit also resets the direction to forward
+  refresh();
+}
+function completeGuide() {
+  if (!guideActive) return;
+  guideActive = false;
+  lsSet("sixways.guide.done", "1");
+}
+/* The guide's beats, derived fresh from the board on every
+   render — the same derivation as the app's guide pill: the
+   first unfinished target owns the bar; an occupied destination
+   takes the blocked copy; a misplaced target the error copy. */
+function guideBeat() {
+  if (!guideActive || !G) return null;
+  if (won) return "done";
+  var names = [["intro", "tap", "error", "blocked"],
+               ["linkIntro", "linkTap", "linkError", "linkBlocked"],
+               ["glowIntro", "glowTap", "glowError", "glowBlocked"]];
+  for (var i = 0; i < GUIDE_TARGETS.length; i++) {
+    var target = GUIDE_TARGETS[i];
+    var targetCell = G.solByNum[target];
+    if (placed.get(targetCell) === target) continue;
+    if (placed.has(targetCell)) return names[i][3];
+    if (placedByNum.has(target)) return names[i][2];
+    if (selectedNum === target) return names[i][1];
+    return names[i][0];
+  }
+  return "done";
+}
+function guideText(beat) {
+  switch (beat) {
+    case "intro": return t("guideIntro", { lo: 1, hi: 3, n: 2 });
+    case "tap": return t("guideTap", { n: 2, lo: 1, hi: 3 });
+    case "error": return t("guideWrong", { n: 2, lo: 1, hi: 3 });
+    case "blocked": return t("guideWrongBlocked", { n: 2, lo: 1, hi: 3 });
+    case "linkIntro": return t("guideLinkIntro", { known: 19, other: 18, target: 20 });
+    case "linkTap": return t("guideLinkTap", { known: 19 });
+    case "linkError": return t("guideLinkError", { n: 20, known: 19 });
+    case "linkBlocked": return t("guideLinkBlocked", { known: 19, n: 20 });
+    case "glowIntro": return t("guideGlowIntro", { n: 17 });
+    case "glowTap": return t("guideGlowTap", { n: 17 });
+    case "glowError": return t("guideGlowError", { n: 17 });
+    case "glowBlocked": return t("guideGlowBlocked", { n: 17 });
+    case "done": return t("guideDone");
+  }
+  return "";
+}
+document.getElementById("btn-guide-done").addEventListener("click", function () {
+  completeGuide();
+  coachDismissed = true; // the guide's exits also retire the coach (the app's rule)
+  refresh();
+});
+document.getElementById("btn-guide-skip").addEventListener("click", function () {
+  completeGuide();
+  coachDismissed = true;
+  refresh();
+});
 
 function pillLabel() {
   if (mode === "daily" && dailyDay !== null) {
@@ -3302,6 +3546,9 @@ function hideTutorialInvite() {
   document.getElementById("tutorial-invite").classList.remove("show");
 }
 function startCoach() {
+  // Kept for the stored-"on" coach gate: accepting the invite
+  // now starts the guided starter (startGuidedStarter), which
+  // is what "Show me how" means on every platform.
   coachOn = true;
   coachDismissed = false;
   hideTutorialInvite();
@@ -3309,7 +3556,10 @@ function startCoach() {
 }
 document.getElementById("btn-tutorial-yes").addEventListener("click", function () {
   try { localStorage.setItem("sixways-tutorial", "on"); } catch (e) { /* storage unavailable */ }
-  startCoach();
+  coachOn = true;
+  coachDismissed = false;
+  hideTutorialInvite();
+  startGuidedStarter();
 });
 document.getElementById("btn-tutorial-no").addEventListener("click", function () {
   try { localStorage.setItem("sixways-tutorial", "off"); } catch (e) { /* storage unavailable */ }
@@ -3320,7 +3570,7 @@ document.getElementById("btn-tutorial-no").addEventListener("click", function ()
 document.getElementById("btn-tutorial").addEventListener("click", function () {
   /* On demand for this visit; the stored choice is left untouched. */
   closeMenu();
-  startCoach();
+  startGuidedStarter();
 });
 if (!tutorialChoice) document.getElementById("tutorial-invite").classList.add("show");
 
@@ -3346,13 +3596,19 @@ function focusSelectedCellIfPlaced() {
   if (cell >= 0 && hexEls[cell]) hexEls[cell].focus();
 }
 document.getElementById("btn-prev-num").addEventListener("click", function () {
-  if (!G || selectedNum <= 1) return;
-  selectedNum--;
+  var prev = prevUnplacedNum(selectedNum);
+  if (!G || prev < 0) return;
+  selectedNum = prev;
   selectedCell = cellOfNum(selectedNum);
   setMsg("");
   refresh();
   scrollChipIntoView(selectedNum, "center");
   focusSelectedCellIfPlaced();
+});
+document.getElementById("btn-dir").addEventListener("click", function () {
+  if (!G || guideActive || mode !== "free") return;
+  workBackward = !workBackward;
+  refresh(); // refresh persists the direction with the free session
 });
 document.getElementById("btn-next-num").addEventListener("click", function () {
   var next = nextUnplacedNum(selectedNum);
@@ -3389,10 +3645,18 @@ function showHintPulse(cell) {
 // range pills, coach and zoom pill in step with the board state.
 function syncChrome() {
   if (!G) return;
+  if (guideActive && placed.size >= 6) completeGuide();
   pillLabel();
   document.getElementById("mistakes-pill").classList.toggle("show", !showErrors);
-  document.getElementById("btn-prev-num").disabled = selectedNum <= 1;
+  document.getElementById("btn-prev-num").disabled = prevUnplacedNum(selectedNum) < 0;
   document.getElementById("btn-next-num").disabled = nextUnplacedNum(selectedNum) < 0;
+  // The stepper in the working direction is the primary advance.
+  document.getElementById("btn-prev-num").classList.toggle("primary", backwardEffective());
+  document.getElementById("btn-next-num").classList.toggle("primary", !backwardEffective());
+  var btnDir = document.getElementById("btn-dir");
+  btnDir.hidden = guideActive || mode !== "free";
+  btnDir.textContent = backwardEffective() ? (G.N + " → 1") : ("1 → " + G.N);
+  btnDir.setAttribute("aria-label", t(backwardEffective() ? "dirBackwardAria" : "dirForwardAria", { n: G.N }));
   if (rangePillsFor !== G.N) {
     rangePillsFor = G.N;
     var holder = document.getElementById("range-pills");
@@ -3433,13 +3697,22 @@ function syncChrome() {
     pillEls[pi].setAttribute("aria-pressed", pActive ? "true" : "false");
   }
   var coach = document.getElementById("coach");
-  if (coachOn && !coachDismissed && !won && placed.size < 2) {
+  if (!guideActive && coachOn && !coachDismissed && !won && !hasCompletedPuzzle()) {
     document.getElementById("coach-text").textContent = cellOfNum(selectedNum) >= 0
       ? t("coachMove", { n: selectedNum })
       : t("coachPick");
     coach.classList.add("show");
   } else {
     coach.classList.remove("show");
+  }
+  var guide = document.getElementById("guide");
+  var beat = guideBeat();
+  if (beat) {
+    document.getElementById("guide-text").textContent = guideText(beat);
+    document.getElementById("btn-guide-done").style.display = beat === "done" ? "" : "none";
+    guide.classList.add("show");
+  } else {
+    guide.classList.remove("show");
   }
   document.getElementById("zoom-pill").classList.toggle("show", zoomLevel > 1);
   positionZoomPill();
@@ -3559,8 +3832,110 @@ document.getElementById("btn-erase").addEventListener("click", function () {
   if (won) return; // victory state is locked
   if (selectedCell >= 0) eraseCell(selectedCell);
 });
+/* Teaching hints (item: the hint as a teacher, mirroring the
+   app): pick the strongest available deduction — between-givens
+   forced, then link-forced, then single-candidate — and explain
+   it in one line. Every case is verified against the solution
+   before it is offered, so a board containing wrong placements
+   can never produce a false explanation. The random placement
+   remains the fallback. The hint cost is unchanged. */
+function logicalCandidates(num) {
+  // The candidate computation for any number, glow-independent
+  // (neighbourHints is this same computation for the selection).
+  var set = new Set();
+  if (!G || won) return set;
+  if (cellOfNum(num) >= 0) return set;
+  var prevCell = num > 1 ? cellOfNum(num - 1) : -1;
+  var nextCell = num < G.N ? cellOfNum(num + 1) : -1;
+  var cands;
+  if (prevCell >= 0 && nextCell >= 0) {
+    var nextNbrs = new Set(G.cells[nextCell].nbrs);
+    cands = G.cells[prevCell].nbrs.filter(function (nb) { return nextNbrs.has(nb) && valueAt(nb) === 0; });
+  } else if (prevCell >= 0 || nextCell >= 0) {
+    var anchor = prevCell >= 0 ? prevCell : nextCell;
+    cands = G.cells[anchor].nbrs.filter(function (nb) { return valueAt(nb) === 0; });
+  } else {
+    cands = [];
+    G.cells.forEach(function (c) { if (valueAt(c.id) === 0) cands.push(c.id); });
+  }
+  cands.forEach(function (cell) {
+    var ln = (G.linkNbrs && G.linkNbrs[cell]) || [];
+    for (var i = 0; i < ln.length; i++) {
+      var v = valueAt(ln[i]);
+      if (v !== 0 && Math.abs(v - num) !== 1) return;
+    }
+    set.add(cell);
+  });
+  return set;
+}
+function teachingHint() {
+  var n, key, parts, a, b;
+  // (1) Between-givens forced: both chain neighbours CORRECTLY
+  // on the board, exactly one legal cell, the solution cell.
+  for (n = 2; n < G.N; n++) {
+    if (cellOfNum(n) >= 0) continue;
+    if (cellOfNum(n - 1) !== G.solByNum[n - 1]) continue;
+    if (cellOfNum(n + 1) !== G.solByNum[n + 1]) continue;
+    var target = G.solByNum[n];
+    var cands = logicalCandidates(n);
+    if (cands.size === 1 && cands.has(target)) {
+      return { num: n, cell: target, key: "hintBetween", vars: { n: n, lo: n - 1, hi: n + 1 } };
+    }
+  }
+  // (2) Link-forced: a link endpoint holds a correct value; the
+  // other endpoint is empty, its solution value is one of the
+  // two options, and the other option is already on the board
+  // (or out of range). The cell must pass the candidate check,
+  // and the target number must be unplaced — a cell holding the
+  // other option can never be its own evidence.
+  var keys = Array.from(G.links).sort(function (x, y) {
+    var xp = x.split("-"), yp = y.split("-");
+    return (+xp[0]) * 1000 + (+xp[1]) - ((+yp[0]) * 1000 + (+yp[1]));
+  });
+  for (var ki = 0; ki < keys.length; ki++) {
+    parts = keys[ki].split("-"); a = +parts[0]; b = +parts[1];
+    var dirs = [[a, b], [b, a]];
+    for (var di = 0; di < 2; di++) {
+      var knownCell = dirs[di][0], targetCell = dirs[di][1];
+      var v = valueAt(knownCell);
+      if (!v || G.solution.get(knownCell) !== v) continue;
+      if (G.givens.has(targetCell) || placed.has(targetCell)) continue;
+      var tNum = G.solution.get(targetCell);
+      if (Math.abs(tNum - v) !== 1) continue;
+      if (cellOfNum(tNum) >= 0) continue;
+      if (!logicalCandidates(tNum).has(targetCell)) continue;
+      var opts = [v - 1, v + 1].filter(function (o) { return o >= 1 && o <= G.N; });
+      if (opts.length === 1) {
+        return { num: tNum, cell: targetCell, key: "hintLinkSolo", vars: { v: v, o: tNum } };
+      }
+      var other = opts[0] === tNum ? opts[1] : opts[0];
+      if (cellOfNum(other) >= 0) {
+        return { num: tNum, cell: targetCell, key: "hintLink",
+          vars: { v: v, lo: Math.min(opts[0], opts[1]), hi: Math.max(opts[0], opts[1]), o: other } };
+      }
+    }
+  }
+  // (3) Single-candidate: exactly one legal cell remains.
+  for (n = 1; n <= G.N; n++) {
+    if (cellOfNum(n) >= 0) continue;
+    var t3 = G.solByNum[n];
+    var c3 = logicalCandidates(n);
+    if (c3.size === 1 && c3.has(t3)) {
+      return { num: n, cell: t3, key: "hintSingle", vars: { n: n } };
+    }
+  }
+  return null;
+}
 document.getElementById("btn-hint").addEventListener("click", function () {
   if (!G || won) return;
+  var taught = teachingHint();
+  if (taught) {
+    placeNum(taught.num, taught.cell, true);
+    showHintPulse(taught.cell);
+    // A winning hint keeps the "Solved!" message — never overwrite it.
+    if (!won) setMsg(taught.key, taught.vars);
+    return;
+  }
   var wrong = [], empty = [];
   G.cells.forEach(function (c) {
     if (G.givens.has(c.id)) return;
@@ -3924,8 +4299,10 @@ function syncLandscapePass(svgEl, vb) {
 
   var invite = document.getElementById("tutorial-invite");
   var coach = document.getElementById("coach");
+  var guideEl = document.getElementById("guide");
   var midEl = invite.classList.contains("show") ? invite
-    : (coach.classList.contains("show") ? coach : null);
+    : (coach.classList.contains("show") ? coach
+    : (guideEl.classList.contains("show") ? guideEl : null));
   var padEl = document.getElementById("pad");
   var nonPad = document.querySelector(".toolbar").offsetHeight
     + document.querySelector(".hud").offsetHeight
@@ -3959,7 +4336,7 @@ window.addEventListener("resize", function () {
 });
 if (window.MutationObserver) {
   var layoutObserver = new MutationObserver(function () { syncLandscapeLayout(); positionZoomPill(); });
-  ["tutorial-invite", "coach"].forEach(function (id) {
+  ["tutorial-invite", "coach", "guide"].forEach(function (id) {
     var el = document.getElementById(id);
     if (el) layoutObserver.observe(el, { attributes: true, attributeFilter: ["class"] });
   });
@@ -3967,7 +4344,7 @@ if (window.MutationObserver) {
 
 applyLanguage();
 applyZoom();
-if (!restoreFreeSession()) newGame();
+if (!restoreFreeSession() && !restoreBankedGame()) newGame();
 
 </script>
 </body>
