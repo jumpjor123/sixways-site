@@ -330,7 +330,9 @@ text.cellnum.bad { fill: var(--error); }
 .zoom-pill {
   /* Compact corner overlay (Jordan, 2026-11-20): small − / % / +
      grouped at the board's top-right corner on a semi-transparent
-     surface, so it never covers the play area. */
+     surface. Shown only while zoomed in (Jordan, 2026-11-24): at
+     100% it stays hidden on every board size, so it never covers
+     tiles at rest. */
   position: absolute; top: 10px; right: 10px; z-index: 5;
   display: none; align-items: center; gap: 2px;
   background: color-mix(in srgb, var(--surface) 82%, transparent);
@@ -3347,7 +3349,7 @@ function syncChrome() {
   } else {
     coach.classList.remove("show");
   }
-  document.getElementById("zoom-pill").classList.toggle("show", zoomLevel > 1 || G.N >= 90);
+  document.getElementById("zoom-pill").classList.toggle("show", zoomLevel > 1);
   positionZoomPill();
 }
 function doRestart() {
@@ -3499,7 +3501,7 @@ function applyZoom() {
   svg.style.maxWidth = zoomLevel > 1 ? "none" : "";
   document.getElementById("zoom-level").textContent = Math.round(zoomLevel * 100) + "%";
   document.getElementById("btn-zoom-out").disabled = zoomLevel <= 1;
-  document.getElementById("zoom-pill").classList.toggle("show", zoomLevel > 1 || (G && G.N >= 90));
+  document.getElementById("zoom-pill").classList.toggle("show", zoomLevel > 1);
   syncLandscapeLayout();
   positionZoomPill();
 }
@@ -3651,6 +3653,24 @@ document.addEventListener("keydown", function (ev) {
     if (document.activeElement && document.activeElement.dataset && document.activeElement.dataset.cell !== undefined) return;
     ev.preventDefault();
     eraseCell(selectedCell);
+  }
+  // Plain + / - step the board zoom through the pill's own
+  // buttons — same steppers, clamps and show/hide rule as a
+  // click (Jordan, 2026-11-24). This is also how a zoom can
+  // START now that the pill is hidden at 100%. Modified keys
+  // stay the browser's (Ctrl/Cmd + zooms the page), and keys
+  // typed into a form field stay the field's.
+  var kt = ev.target;
+  var inField = kt && (kt.tagName === "INPUT" || kt.tagName === "TEXTAREA"
+    || kt.tagName === "SELECT" || kt.isContentEditable);
+  if (G && !inField && !ev.ctrlKey && !ev.metaKey && !ev.altKey) {
+    if (ev.key === "+" || ev.key === "=") {
+      ev.preventDefault();
+      document.getElementById("btn-zoom-in").click();
+    } else if (ev.key === "-" || ev.key === "−" || ev.key === "_") {
+      ev.preventDefault();
+      document.getElementById("btn-zoom-out").click();
+    }
   }
 });
 
