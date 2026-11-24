@@ -90,7 +90,7 @@
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
-html { height: 100%; touch-action: manipulation; }
+html { height: 100%; touch-action: pan-x pan-y; }
 body {
   background: var(--canvas); color: var(--ink);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
@@ -302,12 +302,18 @@ footer p { margin: 0; margin-left: auto; color: var(--ink-soft); font-size: 0.9r
 }
 svg#board {
   display: block; width: 100%; height: 100%; max-width: 560px; margin: 0 auto;
-  touch-action: manipulation;
+  touch-action: pan-x pan-y;
 }
-/* No double-tap zoom anywhere on the page (iOS Safari zooms on rapid
-   repeat taps, e.g. Undo); pinch zoom stays available. touch-action is
-   not inherited, so it is set universally. */
-* { touch-action: manipulation; }
+/* No browser zoom gestures anywhere on the page: double-tap zoom
+   (iOS Safari zooms on rapid repeat taps, e.g. Undo) AND pinch page
+   zoom are both off — pan-x pan-y is manipulation WITHOUT the
+   pinch-zoom term. Page pinch was a trap (2026-11-24): a pinch
+   starting off the board scaled the whole page, and the board's
+   Safari gesture guard then swallowed the pinch back out, leaving
+   no way back to 100%. Board zoom lives in the app instead (zoom
+   pill; pinch on the 60/90 boards). touch-action is not inherited,
+   so it is set universally. */
+* { touch-action: pan-x pan-y; }
 .hex { fill: var(--hex-empty); stroke: var(--hex-stroke); stroke-width: 1.2; cursor: pointer; }
 .hex.given { fill: var(--hex-given); }
 .hex.filled { fill: var(--hex-filled); }
@@ -3221,19 +3227,28 @@ function buildShareImageFile() {
     } catch (e) { fail(); }
   });
 }
-/* Double-tap zoom guard (Batch 16): touch-action: manipulation is
-   already set universally, but iOS Safari still double-tap-zooms
-   the board on some versions — and that fights the two-tap erase
-   on a filled cell (two ordinary taps: select, then erase).
-   Mobile Safari drives that zoom through its gesture events, so
-   suppress those on the board surface only. Clicks are untouched,
-   and pinch zoom everywhere outside the board still works. */
+/* Safari gesture-zoom guard (Batch 16, extended 2026-11-24):
+   Mobile Safari drives its pinch page zoom through gesture
+   events. Batch 16 suppressed them on the board surface only —
+   but that left the rest of the page pinch-zoomable, and two
+   players got trapped (2026-11-24): a pinch starting on the
+   number tray or the action buttons scaled the WHOLE page (the
+   in-app zoom was never engaged, so no zoom pill showed), and
+   every pinch back out landed on the board — where this guard
+   swallowed it. No in-app control can reset Safari's page
+   scale, so there was no way back. The guard now covers the
+   whole play page: Safari never page-zooms here, and the only
+   zoom is the app's own board zoom. Gesture events are separate
+   from pointer events, so the in-app pinch handler on 60/90
+   boards still receives its gestures, and clicks are untouched. */
 var boardScrollEl = document.getElementById("board-scroll");
 if (boardScrollEl) {
   boardScrollEl.addEventListener("gesturestart", function (e) { e.preventDefault(); });
   boardScrollEl.addEventListener("gesturechange", function (e) { e.preventDefault(); });
   boardScrollEl.addEventListener("dblclick", function (e) { e.preventDefault(); });
 }
+document.addEventListener("gesturestart", function (e) { e.preventDefault(); });
+document.addEventListener("gesturechange", function (e) { e.preventDefault(); });
 
 document.getElementById("btn-share").addEventListener("click", function () {
   var text = buildShareText();
@@ -3602,11 +3617,12 @@ document.getElementById("btn-zoom-reset").addEventListener("click", function () 
    (replacing the native scroll that touch-action:none hands over);
    a clean tap (<10px movement) is untouched and places/selects
    exactly as before, and any click a drag or pinch leaves behind
-   is swallowed. Double-tap toggles 1x <-> last zoom, but ONLY from
-   a printed given or the board background: two ordinary taps are
-   gameplay (select, then erase — the pair Batch 16's guard exists
-   to protect), so a double-tap anywhere else keeps its gameplay
-   meaning and never zooms. Gated to 60/90 like the pill's resting
+   is swallowed. Double-tap toggles 1x <-> last zoom: zooming IN
+   works only from a printed given or the board background (two
+   ordinary taps at 100% are gameplay — select, then erase, the
+   pair Batch 16's guard exists to protect), but while zoomed a
+   double-tap on ANY cell toggles back out (2026-11-24: the exit
+   gesture must work from wherever the player is). Gated to 60/90 like the pill's resting
    presence on 90; the 36 board is exactly as before. Zoom is
    transient: commitPuzzle() resets it and it is never saved. */
 var boardPointers = new Map();
@@ -3695,9 +3711,17 @@ if (boardScrollEl) {
     panStart = null;
     if (wasPinch || !tap || tap.dragged) { lastTapInfo = null; return; }
     // Clean tap: the click itself proceeds untouched, unless this is
-    // the second half of a double-tap on a given / the background.
+    // the second half of a double-tap on a given / the background —
+    // or, while zoomed, on any cell at all.
     var now = performance.now();
-    var isFreeTarget = tap.cell === -1 || (G && G.givens.has(tap.cell));
+    // While zoomed, a double-tap ANYWHERE on the board is the
+    // get-me-out gesture and always toggles back to 100%
+    // (2026-11-24: zoomed-in players had no reliable exit — a
+    // double-tap on a filled cell merely selected or erased).
+    // At 100% the Batch 16 rule stands: zooming IN by double-tap
+    // works only from a printed given or the background, so two
+    // ordinary gameplay taps (select, then erase) never zoom.
+    var isFreeTarget = zoomLevel > 1 || tap.cell === -1 || (G && G.givens.has(tap.cell));
     if (isFreeTarget && lastTapInfo && lastTapInfo.cell === tap.cell && now - lastTapInfo.at < 320) {
       var anchor = zoomAnchor(tap.x, tap.y);
       if (zoomLevel > 1) { lastZoomLevel = zoomLevel; zoomTo(1, anchor); }
