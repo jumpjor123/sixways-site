@@ -762,7 +762,7 @@ text.cellnum.bad { fill: var(--error); }
    and an 11px date chip. Measured with worst-case labels in
    Free Play and Daily Race. */
 @media (max-width: 430px) {
-  header { padding-left: 6px; padding-right: 6px; }
+  header { padding-left: 16px; padding-right: 16px; }
   header .brand { gap: 6px; }
   .header-actions { gap: 6px; }
   .mode-switch button { font-size: 11.5px; padding: 4px 8px; }
@@ -772,11 +772,17 @@ text.cellnum.bad { fill: var(--error); }
   /* Small-screen proportions (2026-11-23, Jordan — his grandmother's
      iPhone): the header lockup steps down one more tier so the row
      keeps real slack at 375–430px instead of ending flush at the
-     edge, and the game column aligns to the header's 6px inset so
-     the board gains the 4px the mismatched insets were holding. */
+     edge. Breathing room (same day, Jordan, on the fixed layout as a
+     Home Screen web app): the column sat too close to the edges —
+     header and game column now share a 16px inset so the board, the
+     action row and the pad all keep a clear margin and stay aligned
+     with each other; the board's small shrink is the accepted trade.
+     (This supersedes the same-day 6px alignment that bought board
+     width.) At ≤350px the toolbar compresses a step further (below)
+     to fund the wider inset without clipping. */
   header .brand { font-size: 1rem; }
   header .brand svg { width: 24px; height: 24px; }
-  .game { padding-left: 6px; padding-right: 6px; }
+  .game { padding-left: 16px; padding-right: 16px; }
   .toolbar .hud-stat { padding: 3px 7px; }
   .toolbar .hud-stats { gap: 4px; }
 }
@@ -797,9 +803,9 @@ text.cellnum.bad { fill: var(--error); }
   #btn-menu { padding: 4px 9px; }
   #btn-menu #menu-label { display: none; }
   .toolbar { gap: 3px; }
-  .mode-switch button { font-size: 11px; padding: 4px 6px; }
-  .toolbar .hud-stats { gap: 4px; }
-  .toolbar .hud-stat { font-size: 11px; padding: 3px 6px; gap: 3px; }
+  .mode-switch button { font-size: 11px; padding: 4px 5px; }
+  .toolbar .hud-stats { gap: 3px; }
+  .toolbar .hud-stat { font-size: 11px; padding: 3px 5px; gap: 3px; }
   .toolbar .hud-stat svg { width: 11px; height: 11px; }
 }
 
