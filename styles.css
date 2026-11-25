@@ -98,19 +98,14 @@ footer .trust { white-space: nowrap; font-size: 0.78rem; letter-spacing: -0.01em
   transition: background-color .18s ease, transform .18s ease;
 }
 .play-button:hover { background: #0A4E54; transform: translateY(-1px); }
-/* App Store button: the web demo button's quieter sibling — same pill,
-   outlined until hovered. Sits beside it in the hero CTA row. */
-.appstore-button {
-  display: inline-block; background: transparent; color: var(--teal);
-  border: 2px solid var(--teal);
-  font-family: ui-rounded, -apple-system, BlinkMacSystemFont, "SF Pro Rounded",
-    "Segoe UI", Roboto, sans-serif;
-  font-weight: 700; font-size: 1.05rem; letter-spacing: 0.01em;
-  text-decoration: none; padding: 11px 28px; border-radius: 999px;
-  margin-left: 12px;
-  transition: background-color .18s ease, color .18s ease, transform .18s ease;
+/* App Store badge: Apple's official badge artwork, unmodified, beside
+   the web demo button in the hero CTA row. */
+.appstore-badge {
+  display: inline-block; margin-left: 12px; vertical-align: middle;
+  transition: transform .18s ease;
 }
-.appstore-button:hover { background: var(--teal); color: var(--surface); transform: translateY(-1px); }
+.appstore-badge:hover { transform: translateY(-1px); }
+.appstore-badge img { display: block; height: 54px; width: auto; }
 /* Header Play pill: the big button's colours, header size. Support and
    Privacy live in the footer; the top bar carries the brand and Play. */
 header nav a.nav-play {
