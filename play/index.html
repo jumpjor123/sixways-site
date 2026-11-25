@@ -1308,7 +1308,7 @@ var desiredSide = 4, desiredDiff = hasCompletedPuzzle() ? "medium" : "easy";
 var workBackward = false;
 function backwardEffective() { return workBackward && mode === "free" && !guideActive; }
 var committedDiff = "medium";
-var hexEls = [], numEls = [], linkEls = {}, linkDotEls = {}, lineGroup = null, pipGroup = null, pulseGroup = null;
+var hexEls = [], numEls = [], linkEls = {}, linkDotEls = {}, lineGroup = null, badLineGroup = null, pipGroup = null, pulseGroup = null;
 // Generation bookkeeping
 var genSeq = 0, isGenerating = false, genTimeoutId = null, genWorker = null, queuedRestart = false;
 // Timer: elapsedAccum holds banked time; startedAt is the live segment,
@@ -2237,10 +2237,16 @@ function buildBoard() {
     svg.appendChild(dot);
     linkDotEls[ek] = dot;
   });
-  // Error pips and the hint pulse live in their own groups above
-  // everything else; refresh() rebuilds their contents.
+  // Error pips, the bad-pair connectors and the hint pulse live
+  // in their own groups above everything else; refresh() rebuilds
+  // their contents. The bad connectors must paint above the cells:
+  // in the under-cell line group a non-adjacent pair's dashed run
+  // is hidden by the intervening hexes (Jordan, 2026-11-25 — the
+  // same paint-order bug the iOS board had).
   pipGroup = document.createElementNS(SVGNS, "g");
   svg.appendChild(pipGroup);
+  badLineGroup = document.createElementNS(SVGNS, "g");
+  svg.appendChild(badLineGroup);
   pulseGroup = document.createElementNS(SVGNS, "g");
   svg.appendChild(pulseGroup);
   G.coords = coords;
@@ -2355,6 +2361,7 @@ function refresh() {
     hexEls[c.id].setAttribute("aria-label", cellLabel(c.id));
   });
   while (lineGroup.firstChild) lineGroup.removeChild(lineGroup.firstChild);
+  while (badLineGroup.firstChild) badLineGroup.removeChild(badLineGroup.firstChild);
   for (var n = 1; n < G.N; n++) {
     var a = cellOfNum(n), b = cellOfNum(n + 1);
     if (a < 0 || b < 0) continue;
@@ -2368,7 +2375,7 @@ function refresh() {
     line.setAttribute("x1", G.coords[a].x); line.setAttribute("y1", G.coords[a].y);
     line.setAttribute("x2", G.coords[b].x); line.setAttribute("y2", G.coords[b].y);
     line.setAttribute("class", "pathline" + (adjacent ? "" : " bad"));
-    lineGroup.appendChild(line);
+    (adjacent ? lineGroup : badLineGroup).appendChild(line);
   }
   // Error pips at the top vertex of each conflicting cell — a
   // shape cue on top of the error fill and stroke.
