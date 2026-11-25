@@ -2817,6 +2817,13 @@ function materializePuzzle(d) {
 function commitPuzzle(puzzle) {
   // Board + settings commit together, here and nowhere else.
   G = puzzle;
+  // Guidance belongs to the starter board only: a guide left
+  // active by an abandoned starter must not follow the player
+  // onto a generated board (its beats are starter-specific).
+  // startGuidedStarter sets guideActive BEFORE committing the
+  // starter, and restoreFreeSession re-derives it after commit,
+  // so clearing it for every non-starter commit is safe.
+  if (!isStarterPuzzle(puzzle)) guideActive = false;
   workBackward = false; // a new game starts forward; restores re-apply their saved direction after commit
   committedDiff = puzzle.diff;
   computeLinkNbrs(G);
@@ -3074,7 +3081,7 @@ document.addEventListener("visibilitychange", function () {
    (keys diff.* and diffline.*). */
 var modalStack = [], lastModalFocus = null, toastTimer = null;
 var pendingSize = null, pendingDiff = null; // settings modal working copy
-var rangePillsFor = 0, coachDismissed = false, menuOpen = false;
+var rangePillsFor = 0, coachDismissed = lsGet("sixways.coach.dismissed") === "1", menuOpen = false;
 /* Tutorial (coach) is OPT-IN: it never starts by itself. The stored
    choice is "on" / "off"; absent means undecided, and the first-visit
    invite prompt asks. coachOn is the live gate refresh() checks. */
@@ -3196,11 +3203,13 @@ function guideText(beat) {
 document.getElementById("btn-guide-done").addEventListener("click", function () {
   completeGuide();
   coachDismissed = true; // the guide's exits also retire the coach (the app's rule)
+  lsSet("sixways.coach.dismissed", "1");
   refresh();
 });
 document.getElementById("btn-guide-skip").addEventListener("click", function () {
   completeGuide();
   coachDismissed = true;
+  lsSet("sixways.coach.dismissed", "1");
   refresh();
 });
 
@@ -3539,6 +3548,7 @@ document.getElementById("mistakes-pill").addEventListener("click", function () {
 });
 document.getElementById("btn-coach-close").addEventListener("click", function () {
   coachDismissed = true;
+  lsSet("sixways.coach.dismissed", "1"); // a dismissal is permanent, not per-visit
   document.getElementById("coach").classList.remove("show");
 });
 
@@ -3552,6 +3562,7 @@ function startCoach() {
   // is what "Show me how" means on every platform.
   coachOn = true;
   coachDismissed = false;
+  try { localStorage.removeItem("sixways.coach.dismissed"); } catch (e) { /* storage unavailable */ }
   hideTutorialInvite();
   refresh();
 }
@@ -3559,6 +3570,7 @@ document.getElementById("btn-tutorial-yes").addEventListener("click", function (
   try { localStorage.setItem("sixways-tutorial", "on"); } catch (e) { /* storage unavailable */ }
   coachOn = true;
   coachDismissed = false;
+  try { localStorage.removeItem("sixways.coach.dismissed"); } catch (e) { /* storage unavailable */ }
   hideTutorialInvite();
   startGuidedStarter();
 });
@@ -3573,7 +3585,16 @@ document.getElementById("btn-tutorial").addEventListener("click", function () {
   closeMenu();
   startGuidedStarter();
 });
-if (!tutorialChoice) document.getElementById("tutorial-invite").classList.add("show");
+/* The invite is a one-time offer, not a fixture: it shows at most
+   once ever (the shown flag is written when it appears, whether
+   or not the player answers), and never to a player with a
+   completed puzzle on record — a returning player who never
+   stored a choice is not a first-timer. The menu's Tutorial
+   entry stays as the permanent door in. */
+if (!tutorialChoice && lsGet("sixways.invite.shown") !== "1" && !hasCompletedPuzzle()) {
+  lsSet("sixways.invite.shown", "1");
+  document.getElementById("tutorial-invite").classList.add("show");
+}
 
 /* ---------- Pad tray: steppers, range pills, auto-scroll ---------- */
 function nextUnplacedNum(from) {
