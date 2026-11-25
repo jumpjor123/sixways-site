@@ -88,7 +88,7 @@ footer .trust { white-space: nowrap; font-size: 0.78rem; letter-spacing: -0.01em
   color: var(--ink-soft); font-size: 0.76rem; font-weight: 600;
   letter-spacing: -0.015em; line-height: 1.35;
 }
-.play-cta { margin: 16px 0; }
+.play-cta { margin: 16px 0; display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: center; }
 .play-button {
   display: inline-block; background: var(--teal); color: var(--surface);
   font-family: ui-rounded, -apple-system, BlinkMacSystemFont, "SF Pro Rounded",
@@ -101,7 +101,7 @@ footer .trust { white-space: nowrap; font-size: 0.78rem; letter-spacing: -0.01em
 /* App Store badge: Apple's official badge artwork, unmodified, beside
    the web demo button in the hero CTA row. */
 .appstore-badge {
-  display: inline-block; margin-left: 12px; vertical-align: middle;
+  display: inline-block; vertical-align: middle;
   transition: transform .18s ease;
 }
 .appstore-badge:hover { transform: translateY(-1px); }
