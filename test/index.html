@@ -60,7 +60,7 @@
   <section>
     <h2 data-i18n="stepsH"></h2>
     <ol class="steps">
-      <li><span>1</span><div data-i18n="step1"></div></li>
+      <li><span>1</span><div><span data-i18n="step1Pre"></span> <a href="https://groups.google.com/g/sixways-testers" data-i18n="step1Link"></a><span data-i18n="step1Post"></span></div></li>
       <li><span>2</span><div data-i18n="step2"></div></li>
       <li><span>3</span><div data-i18n="step3"></div></li>
       <li><span>4</span><div data-i18n="step4"></div></li>
@@ -68,9 +68,7 @@
   </section>
 
   <section>
-    <h2 data-i18n="signupH"></h2>
-    <p data-i18n="signupText"></p>
-    <p class="cta-row"><a class="cta-button" id="signup-btn" href="mailto:support@sixways.app?subject=Sixways%20Android%20test&amp;body=Hi!%20I'd%20like%20to%20test%20Sixways%20on%20Android.%0A%0AThe%20Google%20email%20address%20I%20use%20in%20the%20Play%20Store%20is%3A%20" data-i18n="signupBtn"></a></p>
+    <p><span data-i18n="helpText"></span> <a href="mailto:support@sixways.app">support@sixways.app</a></p>
   </section>
 
   <section>
@@ -99,15 +97,13 @@ var STR = {
     qrAlt: "QR code linking to the Google Play test opt-in page",
     testerBtn: "Become a tester",
     stepsH: "How it works",
-    step1: "Sign up below first, so we can add your Google email address to the tester list. The opt-in link only works once your address is on the list.",
-    step2: "Open the opt-in link above (or scan the QR code) and tap “Become a tester”.",
+    step1Pre: "Join the",
+    step1Link: "Sixways Testers group",
+    step1Post: " first, using the same Google account as the one signed into the Play Store on your phone. The opt-in link in the next step only works once you're a member.",
+    step2: "Open the opt-in link above (or scan the QR code) and tap “Become a tester”. This works only after you've joined the group in step 1: until your account is a member, Google shows “App not available”. Membership can take a little while to take effect, so if you see that message, wait a bit and try again.",
     step3: "On the same page, tap the link to download the app on Google Play, then tap “Install”.",
     step4: "Open Sixways once — that's it. Please don't tap “Leave the test”: staying in for the next two weeks is what helps the most. The app updates itself automatically as new test versions come out.",
-    signupH: "Get on the tester list",
-    signupText: "Tap the button to open your mail app with a message ready to send — just add the Google email address you use in the Play Store. We'll add it to the tester list, and then the opt-in link above will work for you.",
-    signupBtn: "Sign up by email",
-    signupSubject: "Sixways Android test",
-    signupBody: "Hi! I'd like to test Sixways on Android.\n\nThe Google email address I use in the Play Store is: ",
+    helpText: "Problems? Email us at",
     noteLabel: "Important:",
     noteText: "the Google account you use to opt in must be the same one signed into the Play Store on your phone. Every step must use that same account.",
     footerSupport: "Support",
@@ -124,15 +120,13 @@ var STR = {
     qrAlt: "Code QR menant à la page d'inscription au test Google Play",
     testerBtn: "Devenir testeur",
     stepsH: "Comment ça marche",
-    step1: "Inscrivez-vous d'abord ci-dessous, pour que nous puissions ajouter votre adresse e-mail Google à la liste des testeurs. Le lien d'inscription ne fonctionne qu'une fois votre adresse sur la liste.",
-    step2: "Ouvrez le lien d'inscription ci-dessus (ou scannez le code QR) et touchez « Devenir testeur ».",
+    step1Pre: "Rejoignez d'abord le",
+    step1Link: "groupe Sixways Testers",
+    step1Post: ", avec le même compte Google que celui connecté au Play Store sur votre téléphone. Le lien d'inscription de l'étape suivante ne fonctionne qu'une fois que vous êtes membre du groupe.",
+    step2: "Ouvrez le lien d'inscription ci-dessus (ou scannez le code QR) et touchez « Devenir testeur ». Cela ne fonctionne qu'après avoir rejoint le groupe à l'étape 1 : tant que votre compte n'en est pas membre, Google affiche « Application non disponible ». L'adhésion peut prendre un peu de temps avant d'être active : si ce message apparaît, patientez un peu, puis réessayez.",
     step3: "Sur la même page, touchez le lien pour télécharger l'application sur Google Play, puis touchez « Installer ».",
     step4: "Ouvrez Sixways une fois — c'est tout. Merci de ne pas toucher « Quitter le test » : rester inscrit pendant les deux prochaines semaines, c'est ce qui aide le plus. L'application se mettra à jour toute seule quand de nouvelles versions de test arriveront.",
-    signupH: "Rejoindre la liste des testeurs",
-    signupText: "Touchez le bouton pour ouvrir votre application de messagerie avec un message déjà préparé — ajoutez simplement l'adresse e-mail Google que vous utilisez dans le Play Store, puis envoyez. Nous l'ajouterons à la liste des testeurs, et le lien d'inscription ci-dessus fonctionnera alors pour vous.",
-    signupBtn: "S'inscrire par e-mail",
-    signupSubject: "Sixways Android test",
-    signupBody: "Bonjour ! Je souhaite tester Sixways sur Android.\n\nL'adresse e-mail Google que j'utilise dans le Play Store est : ",
+    helpText: "Un souci ? Écrivez-nous :",
     noteLabel: "Important :",
     noteText: "le compte Google utilisé pour l'inscription doit être le même que celui connecté au Play Store sur votre téléphone. Toutes les étapes doivent utiliser ce même compte.",
     footerSupport: "Assistance",
@@ -166,9 +160,6 @@ function applyLanguage() {
     if (s[key]) nodes[i].textContent = s[key];
   }
   document.getElementById("qr-img").setAttribute("alt", s.qrAlt);
-  document.getElementById("signup-btn").href =
-    "mailto:support@sixways.app?subject=" + encodeURIComponent(s.signupSubject) +
-    "&body=" + encodeURIComponent(s.signupBody);
   var langEn = document.getElementById("btn-lang-en");
   var langFr = document.getElementById("btn-lang-fr");
   langEn.classList.toggle("active", lang === "en");
