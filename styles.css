@@ -23,7 +23,7 @@ body {
     Roboto, "Helvetica Neue", Arial, sans-serif;
   font-size: 17px; line-height: 1.6; -webkit-font-smoothing: antialiased;
 }
-h1, h2, .brand span, .steps span {
+h1, h2, .brand span, .steps li > span:first-child {
   font-family: ui-rounded, -apple-system, BlinkMacSystemFont, "SF Pro Rounded",
     "Segoe UI", Roboto, sans-serif;
 }
@@ -106,6 +106,40 @@ footer .trust { white-space: nowrap; font-size: 0.78rem; letter-spacing: -0.01em
 }
 .appstore-badge:hover { transform: translateY(-1px); }
 .appstore-badge img { display: block; height: 54px; width: auto; }
+/* Android test link in the hero: an orange pill in the same family
+   as the test page's CTA buttons, so the Android route carries the
+   same weight as the App Store badge in the "Get Sixways" cards. */
+.android-test {
+  display: inline-block; background: var(--orange); color: #FFF7EA;
+  font-family: ui-rounded, -apple-system, BlinkMacSystemFont, "SF Pro Rounded",
+    "Segoe UI", Roboto, sans-serif;
+  font-weight: 700; font-size: 1.05rem; letter-spacing: 0.01em;
+  text-decoration: none; padding: 13px 30px; border-radius: 999px;
+  transition: background-color .18s ease, transform .18s ease;
+}
+.android-test:hover { background: var(--orange-dark); transform: translateY(-1px); }
+/* "Get Sixways": the two platform cards under the hero demo button —
+   iPhone (live on the App Store) and Android (free test) presented
+   as equals. Stacked on phones, side by side when there is room. */
+.get-sixways {
+  flex: 1 1 100%; display: grid; grid-template-columns: 1fr; gap: 12px;
+  margin-top: 4px; text-align: center;
+}
+.get-heading {
+  grid-column: 1 / -1; margin: 0; color: var(--ink);
+  font-family: ui-rounded, -apple-system, BlinkMacSystemFont, "SF Pro Rounded",
+    "Segoe UI", Roboto, sans-serif;
+  font-size: 1.15rem; font-weight: 800;
+}
+.get-platform {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 18px 20px;
+}
+.get-text { margin: 0 0 14px; color: var(--ink-soft); }
+.get-text strong { color: var(--ink); }
+@media (min-width: 900px) {
+  .get-sixways { grid-template-columns: 1fr 1fr; }
+}
 /* Header Play pill: the big button's colours, header size. Support and
    Privacy live in the footer; the top bar carries the brand and Play. */
 header nav a.nav-play {
@@ -134,7 +168,7 @@ section p strong { color: var(--ink); }
 
 .steps { list-style: none; margin: 0 0 16px; padding: 0; }
 .steps li { display: flex; gap: 14px; margin-bottom: 12px; color: var(--ink-soft); }
-.steps li span { color: var(--teal); font-weight: 800; font-size: 1.15rem; line-height: 1.45; }
+.steps li > span:first-child { color: var(--teal); font-weight: 800; font-size: 1.15rem; line-height: 1.45; }
 
 .boards { list-style: none; margin: 0 0 16px; padding: 0; }
 .boards li {
@@ -238,11 +272,15 @@ section p strong { color: var(--ink); }
      after badge + gap: 20px padding + 38px badge + 14px gap. */
   position: relative; padding: 20px 20px 20px 72px;
 }
-.steps li span {
+.steps li > span:first-child {
   display: inline-flex; align-items: center; justify-content: center;
   width: 38px; height: 43px; background: var(--teal); color: var(--surface);
   font-size: 1.05rem; font-weight: 800; line-height: 1;
-  /* One alignment rule for every card, however the text wraps:
+  /* The selector is scoped to the numeral span (the li's first
+     child) on purpose: a bare ".steps li span" also captured the
+     step body-text spans on the test page and clipped them into
+     the badge as word fragments.
+     One alignment rule for every card, however the text wraps:
      the badge's centre sits on the first text line's centre —
      top = 20px card padding + (27.2px line box − 43px badge) / 2.
      Absolute positioning keeps the rule identical in all three
