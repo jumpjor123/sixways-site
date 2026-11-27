@@ -7,9 +7,9 @@
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#F3EEE4">
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0B2226">
-<meta name="description" content="Help test Sixways on Android: join Google Play's official test, install the app, and play. Staying in the test for two weeks helps Sixways launch on Android.">
-<title>Test Sixways on Android — Sixways</title>
-<link rel="stylesheet" href="../styles.css?v=11">
+<meta name="description" content="Help test Sixways: on Android, join Google Play's official test — right now it is the only way to play, and staying in for two weeks helps the launch. On iPhone, get the full game on the App Store or join the beta.">
+<title>Test Sixways — Sixways</title>
+<link rel="stylesheet" href="../styles.css?v=12">
 <style>
 /* Test page — page-local pieces only; the base look is the shared
    styles.css. The language toggle mirrors the play page's. */
@@ -38,6 +38,7 @@
   border-radius: 16px; padding: 16px 20px;
 }
 .note p { margin: 0; }
+.note p + p { margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -81,7 +82,9 @@
 
   <section>
     <div class="note">
-      <p><strong data-i18n="noteLabel"></strong> <span data-i18n="noteText"></span></p>
+      <p><strong data-i18n="noteLabel"></strong></p>
+      <p><strong data-i18n="noteAndroidLabel"></strong> <span data-i18n="noteAndroid"></span></p>
+      <p><strong data-i18n="noteIphoneLabel"></strong> <span data-i18n="noteIphone"></span></p>
     </div>
   </section>
 </main>
@@ -97,21 +100,21 @@
    page) and the default is the browser's language. */
 var STR = {
   en: {
-    docTitle: "Test Sixways on Android — Sixways",
-    h1: "Test Sixways on Android",
-    intro: "Sixways is looking for Android testers. Testing is simple: install the app from Google Play's official test, open it, and play — just like any other player. Staying in the test for two weeks helps Sixways get ready for its Android launch.",
+    docTitle: "Test Sixways \u2014 Sixways",
+    h1: "Test Sixways",
+    intro: "Sixways needs Android testers to launch on Google Play \u2014 and right now, joining the test is the only way to play on Android. Testing is simple: install the app, open it, and play, just like any other player. Staying in the test for two weeks helps Sixways launch on Android. On iPhone, the full game is already on the App Store \u2014 or join the iPhone beta for new versions before everyone else.",
     qrAlt: "QR code linking to the Google Play test opt-in page",
     testerBtn: "Become a tester",
     stepsH: "How it works",
-    step1Title: "Tell us your Play Store email",
-    step1: "Use the email address shown in your Play Store profile. We'll add it to the tester list, then email you the download link \u2014 usually within the hour.",
+    step1Title: "Tell us your email",
+    step1: "The signup form asks which phone you use. On Android, give the email address from your Play Store profile; on iPhone, your Apple ID email. We'll add you, then email you the download link \u2014 usually within the hour.",
     signupBtn: "Give us your email",
     step2Title: "Open our email and tap the link",
-    step2: "Then tap \u201cBecome a tester\u201d and \u201cInstall\u201d. Open the link while signed in with the same email you gave us. Once you've played, please stay in the test for the next two weeks \u2014 that's what helps the most, so please don't tap \u201cLeave the test\u201d. The app updates itself as new test versions come out.",
+    step2: "On Android, tap \u201cBecome a tester\u201d and \u201cInstall\u201d. On iPhone, accept the invitation in the TestFlight app and install. Either way, open the link while signed in with the same email you gave us. Once you've played, please stay in the test for the next two weeks \u2014 that's what helps the most. The app updates itself as new test versions come out.",
     step3Title: "Play a game, tell us what you think (60 seconds)",
     step3: "Play a game or two, then tap the button: one quick rating and one box for anything that confused you or felt broken. Honest answers help most.",
     feedbackBtn: "Give feedback (60 seconds)",
-    invitedH: "Already invited?",
+    invitedH: "Already invited on Android?",
     invitedCaption: "If we've already emailed you, you can also open the test page directly: on your Android phone, scan this code with your camera \u2014 or tap the button below.",
     iphoneH: "On iPhone?",
     iphoneBody: "Sixways is already live on the App Store \u2014 you can play the full game today.",
@@ -120,28 +123,31 @@ var STR = {
     iphoneBetaBtn: "Join the iPhone beta",
     helpText: "Problems? Email us at",
     noteLabel: "Important:",
-    noteText: "the Google account you use to opt in must be the same one signed into the Play Store on your phone. Every step must use that same account.",
+    noteAndroidLabel: "Android:",
+    noteAndroid: "the Google account you use to opt in must be the same one signed into the Play Store on your phone. Every step must use that same account.",
+    noteIphoneLabel: "iPhone:",
+    noteIphone: "the invitation goes to your Apple ID email. Install the free TestFlight app to accept it.",
     footerSupport: "Support",
     footerPrivacy: "Privacy",
     footerContact: "Contact",
     trust: "No ads · No tracking · No subscription · Works offline"
   },
   fr: {
-    docTitle: "Tester Sixways sur Android — Sixways",
-    h1: "Tester Sixways sur Android",
-    intro: "Sixways cherche des testeurs Android. Le test est simple : installez l'application depuis le test officiel de Google Play, ouvrez-la et jouez — comme n'importe quel joueur. Rester inscrit au test pendant deux semaines aide Sixways à préparer son lancement sur Android.",
+    docTitle: "Tester Sixways \u2014 Sixways",
+    h1: "Testez Sixways",
+    intro: "Sixways a besoin de testeurs Android pour son lancement sur Google Play \u2014 et pour le moment, le test est le seul moyen de jouer sur Android. Le test est simple : installez l'application, ouvrez-la et jouez, comme n'importe quel joueur. Rester inscrit au test pendant deux semaines aide Sixways \u00e0 se lancer sur Android. Sur iPhone, le jeu complet est d\u00e9j\u00e0 sur l'App Store \u2014 ou rejoignez la b\u00eata iPhone pour d\u00e9couvrir les nouvelles versions en avant-premi\u00e8re.",
     qrAlt: "Code QR menant \u00e0 la page d'inscription au test Google Play",
     testerBtn: "Devenir testeur",
     stepsH: "Comment \u00e7a marche",
-    step1Title: "Donnez-nous votre e-mail Play Store",
-    step1: "Utilisez l'adresse e-mail affich\u00e9e dans votre profil Play Store. Nous l'ajouterons \u00e0 la liste des testeurs, puis nous vous enverrons le lien de t\u00e9l\u00e9chargement par e-mail \u2014 en g\u00e9n\u00e9ral dans l'heure.",
+    step1Title: "Donnez-nous votre e-mail",
+    step1: "Le formulaire d'inscription vous demande quel t\u00e9l\u00e9phone vous utilisez. Sur Android, indiquez l'adresse e-mail de votre profil Play Store ; sur iPhone, l'adresse e-mail de votre identifiant Apple. Nous vous ajouterons, puis nous vous enverrons le lien de t\u00e9l\u00e9chargement par e-mail \u2014 en g\u00e9n\u00e9ral dans l'heure.",
     signupBtn: "Donner mon e-mail",
     step2Title: "Ouvrez notre e-mail et touchez le lien",
-    step2: "Touchez ensuite \u00ab Devenir testeur \u00bb, puis \u00ab Installer \u00bb. Ouvrez le lien en \u00e9tant connect\u00e9 avec la m\u00eame adresse e-mail que celle que vous nous avez donn\u00e9e. Une fois le jeu lanc\u00e9, merci de rester inscrit au test pendant les deux prochaines semaines \u2014 c'est ce qui aide le plus, donc ne touchez pas \u00ab Quitter le test \u00bb. L'application se mettra \u00e0 jour toute seule quand de nouvelles versions de test arriveront.",
+    step2: "Sur Android, touchez \u00ab Devenir testeur \u00bb, puis \u00ab Installer \u00bb. Sur iPhone, acceptez l'invitation dans l'application TestFlight et installez le jeu. Dans les deux cas, ouvrez le lien en \u00e9tant connect\u00e9 avec la m\u00eame adresse e-mail que celle que vous nous avez donn\u00e9e. Une fois le jeu lanc\u00e9, merci de rester inscrit au test pendant les deux prochaines semaines \u2014 c'est ce qui aide le plus. L'application se mettra \u00e0 jour toute seule quand de nouvelles versions de test arriveront.",
     step3Title: "Jouez une partie, donnez-nous votre avis (60 secondes)",
     step3: "Jouez une partie ou deux, puis touchez le bouton : une note rapide et un champ pour tout ce qui vous a sembl\u00e9 confus ou cass\u00e9. Les r\u00e9ponses honn\u00eates aident le plus.",
     feedbackBtn: "Donner mon avis (60 secondes)",
-    invitedH: "D\u00e9j\u00e0 invit\u00e9 ?",
+    invitedH: "D\u00e9j\u00e0 invit\u00e9 sur Android ?",
     invitedCaption: "Si nous vous avons d\u00e9j\u00e0 envoy\u00e9 l'e-mail, vous pouvez aussi ouvrir la page de test directement : avec votre t\u00e9l\u00e9phone Android, scannez ce code avec l'appareil photo \u2014 ou touchez le bouton ci-dessous.",
     iphoneH: "Sur iPhone ?",
     iphoneBody: "Sixways est d\u00e9j\u00e0 disponible sur l'App Store \u2014 vous pouvez jouer au jeu complet d\u00e8s aujourd'hui.",
@@ -150,7 +156,10 @@ var STR = {
     iphoneBetaBtn: "Rejoindre la b\u00eata iPhone",
     helpText: "Un souci ? Écrivez-nous :",
     noteLabel: "Important :",
-    noteText: "le compte Google utilisé pour l'inscription doit être le même que celui connecté au Play Store sur votre téléphone. Toutes les étapes doivent utiliser ce même compte.",
+    noteAndroidLabel: "Android :",
+    noteAndroid: "le compte Google utilis\u00e9 pour l'inscription doit \u00eatre le m\u00eame que celui connect\u00e9 au Play Store sur votre t\u00e9l\u00e9phone. Toutes les \u00e9tapes doivent utiliser ce m\u00eame compte.",
+    noteIphoneLabel: "iPhone :",
+    noteIphone: "l'invitation est envoy\u00e9e \u00e0 l'adresse e-mail de votre identifiant Apple. Installez l'application gratuite TestFlight pour l'accepter.",
     footerSupport: "Assistance",
     footerPrivacy: "Confidentialité",
     footerContact: "Contact",
