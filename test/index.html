@@ -23,6 +23,7 @@
   padding: 14px;
 }
 .cta-row { text-align: center; margin: 18px 0 2px; }
+.cta-row.left { text-align: left; margin: 12px 0 2px; }
 .cta-button {
   display: inline-block; background: var(--orange); color: #FFF7EA;
   font-family: ui-rounded, -apple-system, BlinkMacSystemFont, "SF Pro Rounded",
@@ -51,20 +52,19 @@
   </section>
 
   <section>
-    <h2 data-i18n="joinH"></h2>
-    <p data-i18n="joinCaption"></p>
-    <div class="qr-card"><img src="qr-optin.png" width="410" height="410" alt="" id="qr-img"></div>
-    <p class="cta-row"><a class="cta-button" href="https://play.google.com/apps/testing/com.sixways.app" data-i18n="testerBtn"></a></p>
+    <h2 data-i18n="stepsH"></h2>
+    <ol class="steps">
+      <li><span>1</span><div><strong data-i18n="step1Title"></strong><br><span data-i18n="step1"></span><p class="cta-row left"><a class="cta-button" href="https://forms.gle/kE7ckusVPxKmTg7Z7" data-i18n="signupBtn"></a></p></div></li>
+      <li><span>2</span><div><strong data-i18n="step2Title"></strong><br><span data-i18n="step2"></span></div></li>
+      <li><span>3</span><div><strong data-i18n="step3Title"></strong><br><span data-i18n="step3"></span><p class="cta-row left"><a class="cta-button" href="https://forms.gle/CnrMy43Wm1rvMJFg9" data-i18n="feedbackBtn"></a></p></div></li>
+    </ol>
   </section>
 
   <section>
-    <h2 data-i18n="stepsH"></h2>
-    <ol class="steps">
-      <li><span>1</span><div><span data-i18n="step1Pre"></span> <a href="https://groups.google.com/g/sixways-testers" data-i18n="step1Link"></a><span data-i18n="step1Post"></span></div></li>
-      <li><span>2</span><div data-i18n="step2"></div></li>
-      <li><span>3</span><div data-i18n="step3"></div></li>
-      <li><span>4</span><div data-i18n="step4"></div></li>
-    </ol>
+    <h2 data-i18n="invitedH"></h2>
+    <p data-i18n="invitedCaption"></p>
+    <div class="qr-card"><img src="qr-optin.png" width="410" height="410" alt="" id="qr-img"></div>
+    <p class="cta-row"><a class="cta-button" href="https://play.google.com/apps/testing/com.sixways.app" data-i18n="testerBtn"></a></p>
   </section>
 
   <section>
@@ -92,17 +92,19 @@ var STR = {
     docTitle: "Test Sixways on Android — Sixways",
     h1: "Test Sixways on Android",
     intro: "Sixways is looking for Android testers. Testing is simple: install the app from Google Play's official test, open it, and play — just like any other player. Staying in the test for two weeks helps Sixways get ready for its Android launch.",
-    joinH: "Join the test",
-    joinCaption: "On your Android phone, scan this code with your camera — or tap the button below. Both take you to the same Google Play test page.",
     qrAlt: "QR code linking to the Google Play test opt-in page",
     testerBtn: "Become a tester",
     stepsH: "How it works",
-    step1Pre: "Join the",
-    step1Link: "Sixways Testers group",
-    step1Post: " first, using the same Google account as the one signed into the Play Store on your phone. The opt-in link in the next step only works once you're a member.",
-    step2: "Open the opt-in link above (or scan the QR code) and tap “Become a tester”. This works only after you've joined the group in step 1: until your account is a member, Google shows “App not available”. Membership can take a little while to take effect, so if you see that message, wait a bit and try again.",
-    step3: "On the same page, tap the link to download the app on Google Play, then tap “Install”.",
-    step4: "Open Sixways once — that's it. Please don't tap “Leave the test”: staying in for the next two weeks is what helps the most. The app updates itself automatically as new test versions come out.",
+    step1Title: "Tell us your Play Store email",
+    step1: "Use the email address shown in your Play Store profile. We'll add it to the tester list, then email you the download link \u2014 usually within the hour.",
+    signupBtn: "Give us your email",
+    step2Title: "Open our email and tap the link",
+    step2: "Then tap \u201cBecome a tester\u201d and \u201cInstall\u201d. Open the link while signed in with the same email you gave us. Once you've played, please stay in the test for the next two weeks \u2014 that's what helps the most, so please don't tap \u201cLeave the test\u201d. The app updates itself as new test versions come out.",
+    step3Title: "Play a game, tell us what you think (60 seconds)",
+    step3: "Play a game or two, then tap the button: one quick rating and one box for anything that confused you or felt broken. Honest answers help most.",
+    feedbackBtn: "Give feedback (60 seconds)",
+    invitedH: "Already invited?",
+    invitedCaption: "If we've already emailed you, you can also open the test page directly: on your Android phone, scan this code with your camera \u2014 or tap the button below.",
     helpText: "Problems? Email us at",
     noteLabel: "Important:",
     noteText: "the Google account you use to opt in must be the same one signed into the Play Store on your phone. Every step must use that same account.",
@@ -115,17 +117,19 @@ var STR = {
     docTitle: "Tester Sixways sur Android — Sixways",
     h1: "Tester Sixways sur Android",
     intro: "Sixways cherche des testeurs Android. Le test est simple : installez l'application depuis le test officiel de Google Play, ouvrez-la et jouez — comme n'importe quel joueur. Rester inscrit au test pendant deux semaines aide Sixways à préparer son lancement sur Android.",
-    joinH: "Rejoindre le test",
-    joinCaption: "Avec votre téléphone Android, scannez ce code avec l'appareil photo — ou touchez le bouton ci-dessous. Les deux mènent à la même page de test Google Play.",
-    qrAlt: "Code QR menant à la page d'inscription au test Google Play",
+    qrAlt: "Code QR menant \u00e0 la page d'inscription au test Google Play",
     testerBtn: "Devenir testeur",
-    stepsH: "Comment ça marche",
-    step1Pre: "Rejoignez d'abord le",
-    step1Link: "groupe Sixways Testers",
-    step1Post: ", avec le même compte Google que celui connecté au Play Store sur votre téléphone. Le lien d'inscription de l'étape suivante ne fonctionne qu'une fois que vous êtes membre du groupe.",
-    step2: "Ouvrez le lien d'inscription ci-dessus (ou scannez le code QR) et touchez « Devenir testeur ». Cela ne fonctionne qu'après avoir rejoint le groupe à l'étape 1 : tant que votre compte n'en est pas membre, Google affiche « Application non disponible ». L'adhésion peut prendre un peu de temps avant d'être active : si ce message apparaît, patientez un peu, puis réessayez.",
-    step3: "Sur la même page, touchez le lien pour télécharger l'application sur Google Play, puis touchez « Installer ».",
-    step4: "Ouvrez Sixways une fois — c'est tout. Merci de ne pas toucher « Quitter le test » : rester inscrit pendant les deux prochaines semaines, c'est ce qui aide le plus. L'application se mettra à jour toute seule quand de nouvelles versions de test arriveront.",
+    stepsH: "Comment \u00e7a marche",
+    step1Title: "Donnez-nous votre e-mail Play Store",
+    step1: "Utilisez l'adresse e-mail affich\u00e9e dans votre profil Play Store. Nous l'ajouterons \u00e0 la liste des testeurs, puis nous vous enverrons le lien de t\u00e9l\u00e9chargement par e-mail \u2014 en g\u00e9n\u00e9ral dans l'heure.",
+    signupBtn: "Donner mon e-mail",
+    step2Title: "Ouvrez notre e-mail et touchez le lien",
+    step2: "Touchez ensuite \u00ab Devenir testeur \u00bb, puis \u00ab Installer \u00bb. Ouvrez le lien en \u00e9tant connect\u00e9 avec la m\u00eame adresse e-mail que celle que vous nous avez donn\u00e9e. Une fois le jeu lanc\u00e9, merci de rester inscrit au test pendant les deux prochaines semaines \u2014 c'est ce qui aide le plus, donc ne touchez pas \u00ab Quitter le test \u00bb. L'application se mettra \u00e0 jour toute seule quand de nouvelles versions de test arriveront.",
+    step3Title: "Jouez une partie, donnez-nous votre avis (60 secondes)",
+    step3: "Jouez une partie ou deux, puis touchez le bouton : une note rapide et un champ pour tout ce qui vous a sembl\u00e9 confus ou cass\u00e9. Les r\u00e9ponses honn\u00eates aident le plus.",
+    feedbackBtn: "Donner mon avis (60 secondes)",
+    invitedH: "D\u00e9j\u00e0 invit\u00e9 ?",
+    invitedCaption: "Si nous vous avons d\u00e9j\u00e0 envoy\u00e9 l'e-mail, vous pouvez aussi ouvrir la page de test directement : avec votre t\u00e9l\u00e9phone Android, scannez ce code avec l'appareil photo \u2014 ou touchez le bouton ci-dessous.",
     helpText: "Un souci ? Écrivez-nous :",
     noteLabel: "Important :",
     noteText: "le compte Google utilisé pour l'inscription doit être le même que celui connecté au Play Store sur votre téléphone. Toutes les étapes doivent utiliser ce même compte.",
