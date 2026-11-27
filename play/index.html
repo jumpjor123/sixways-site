@@ -417,6 +417,29 @@ text.cellnum.bad { fill: var(--error); }
 }
 .win-share .btn svg { width: 17px; height: 17px; color: var(--teal); flex: none; }
 .win-actions { display: flex; gap: 10px; }
+/* Store handoff (funnel, 2026-11-27): a slim bar under the game
+   column plus a small upsell inside the win card. Presentation
+   only — no game logic lives here. */
+.store-handoff {
+  flex: none; width: 100%; max-width: 760px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: center;
+  flex-wrap: wrap; gap: 6px 16px; padding: 6px 22px 10px;
+}
+.store-handoff a.badge-link { display: inline-flex; line-height: 0; }
+.store-handoff img { height: 36px; width: auto; display: block; }
+.store-handoff a.android-test {
+  color: var(--accent-text); font-weight: 700; font-size: 0.95rem;
+  text-decoration: underline; text-underline-offset: 3px; white-space: nowrap;
+}
+.win-upsell {
+  margin: 0 0 12px; padding-top: 10px; border-top: 1px solid var(--border);
+  display: flex; align-items: center; flex-wrap: wrap; gap: 6px 14px;
+  font-size: 14px;
+}
+.win-upsell a.badge-link { display: inline-flex; line-height: 0; }
+.win-upsell img { height: 32px; width: auto; display: block; }
+.win-upsell a.android-test { color: var(--accent-text); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+
 .btn {
   font-size: 15px; font-weight: 700; cursor: pointer;
   border-radius: 14px; border: 1px solid var(--border);
@@ -1071,6 +1094,11 @@ text.cellnum.bad { fill: var(--error); }
     <div class="win-share" id="win-share" hidden>
       <button type="button" class="btn secondary" id="btn-share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4"/><path d="m6.5 8.5 5.5-5.5 5.5 5.5"/><path d="M5 12.5V19a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6.5"/></svg><span id="lbl-share">Share Result</span></button>
     </div>
+    <div class="win-upsell" id="win-upsell">
+      <span id="win-upsell-label">Get the full game:</span>
+      <a class="badge-link" id="win-upsell-store" href="https://apps.apple.com/app/id6838450390" aria-label="Download on the App Store"><img id="win-upsell-badge" src="../assets/app-store-badge-en.svg" alt="Download on the App Store" height="32"></a>
+      <a class="android-test" id="win-upsell-android" href="../test/">On Android? Join the free founding tester team</a>
+    </div>
     <div class="win-actions">
       <button type="button" class="btn primary" id="btn-again">New Puzzle</button>
       <button type="button" class="btn secondary" id="btn-change-size">Change Size</button>
@@ -1120,6 +1148,10 @@ text.cellnum.bad { fill: var(--error); }
   </div>
 </div>
 </main>
+<div class="store-handoff" id="store-handoff">
+  <a class="badge-link" id="handoff-store" href="https://apps.apple.com/app/id6838450390" aria-label="Download on the App Store"><img id="handoff-badge" src="../assets/app-store-badge-en.svg" alt="Download on the App Store" height="36"></a>
+  <a class="android-test" id="handoff-android" href="../test/">On Android? Join the free founding tester team</a>
+</div>
 <div class="backdrop" id="modal-settings">
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="settings-title">
     <div class="sheet-head">
@@ -1435,6 +1467,9 @@ var STR = {
     "footerPrivacy": "Privacy",
     "footerContact": "Contact",
     "footerNote": "Free demo — no ads, no tracking. The full game is on the App Store.",
+    "storeUpsell": "Get the full game:",
+    "storeBadgeAlt": "Download on the App Store",
+    "androidTestCta": "On Android? Join the free founding tester team",
     "cellPrefix": "Cell {n}: ",
     "cellEmpty": "empty",
     "cellFixed": "number {n}, fixed number",
@@ -1607,6 +1642,9 @@ var STR = {
     "footerPrivacy": "Confidentialité",
     "footerContact": "Contact",
     "footerNote": "Démo gratuite — sans pub ni suivi. Le jeu complet est sur l'App Store.",
+    "storeUpsell": "Le jeu complet :",
+    "storeBadgeAlt": "Télécharger sur l'App Store",
+    "androidTestCta": "Sur Android ? Rejoins l'équipe gratuite des testeurs fondateurs",
     "cellPrefix": "Case {n} : ",
     "cellEmpty": "vide",
     "cellFixed": "nombre {n}, nombre fixe",
@@ -1843,6 +1881,23 @@ function applyLanguage() {
       : "mailto:support@sixways.app?subject=Sixways%20support");
   }
   document.getElementById("footer-note").textContent = t("footerNote");
+  /* Store handoff + win upsell (funnel, 2026-11-27): label, badge
+     artwork and Android-test link follow the UI language. */
+  var badgeSrc = lang === "fr" ? "../assets/app-store-badge-fr.svg" : "../assets/app-store-badge-en.svg";
+  [["handoff-badge", badgeSrc], ["win-upsell-badge", badgeSrc]].forEach(function (pair) {
+    var img = document.getElementById(pair[0]);
+    if (img) { img.setAttribute("src", pair[1]); img.setAttribute("alt", t("storeBadgeAlt")); }
+  });
+  [["handoff-store"], ["win-upsell-store"]].forEach(function (pair) {
+    var a = document.getElementById(pair[0]);
+    if (a) a.setAttribute("aria-label", t("storeBadgeAlt"));
+  });
+  var winLbl = document.getElementById("win-upsell-label");
+  if (winLbl) winLbl.textContent = t("storeUpsell");
+  [["handoff-android"], ["win-upsell-android"]].forEach(function (pair) {
+    var a = document.getElementById(pair[0]);
+    if (a) a.textContent = t("androidTestCta");
+  });
   var timeStat = document.getElementById("st-time-stat");
   if (timeStat) timeStat.setAttribute("aria-label", t(showBestTime ? "bestTimeHideAria" : "bestTimeShowAria"));
   renderTime();
