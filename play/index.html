@@ -2514,12 +2514,17 @@ function renderMsg() {
 
 /* ============ Moves ============ */
 function snapshot(undoneNum) {
-  // Snapshots carry the full pre-move state (placements, hint count,
-  // win flag, banked clock AND whether the clock had a live segment
-  // running) so Undo can restore any of them exactly — including
-  // undoing a hint (hint count goes back down) and undoing a
-  // Restart (a won board comes back won, clock frozen). Mirrors
-  // the native GameSession snapshot.
+  // Snapshots carry the full pre-move state (placements, hint
+  // count, win flag, banked clock AND whether the clock had a
+  // live segment running) so Undo can restore the board state
+  // exactly — including undoing a hint (hint count goes back
+  // down) and undoing a Restart (a won board comes back won).
+  // The banked clock still travels in the snapshot (format
+  // parity with the native GameSession), but Undo never rewinds
+  // the live clock to it: elapsed time is monotonic — the
+  // snapshot's time is used only to refreeze a board that comes
+  // back won (see the Undo handler). Mirrors the native
+  // GameSession snapshot.
   undoStack.push(JSON.stringify({
     entries: Array.from(placed.entries()),
     undoneNum: (undoneNum === undefined || undoneNum === null) ? null : undoneNum,
@@ -3853,19 +3858,33 @@ document.getElementById("btn-undo").addEventListener("click", function () {
   placedByNum = new Map();
   placed.forEach(function (num, cell) { placedByNum.set(num, cell); });
   // Restore the pre-move hint count (undoing a hint placement gives
-  // the hint back) and the pre-move clock. Because the snapshot's
-  // clock was taken before the win, victory-screen time is excluded.
+  // the hint back). The clock is NOT rewound with the board: it is
+  // total elapsed playing time and monotonic (Jordan's ruling,
+  // 2026-11-27) — Undo restores board state only, so a live board
+  // keeps the current clock. The one exception is a board that
+  // comes back won: it refreezes at the snapshot's recorded time,
+  // so a finished game's time is never corrupted (mirrors the
+  // native GameSession).
   // DAILY RACE exception (the app's Batch 9 M2 rule): in a race the
-  // placements rewind but the clock and the counters NEVER do — a
-  // spent hint stays spent, a charged mistake stays charged, and
-  // banked race time is monotonic.
+  // placements rewind but the counters NEVER do — a spent hint
+  // stays spent and a charged mistake stays charged. The clock
+  // never rewinds in a race either: banked race time is monotonic.
   if (mode !== "daily") {
     hintsUsed = (!Array.isArray(parsed) && typeof parsed.hintsUsed === "number") ? parsed.hintsUsed : hintsUsed;
     mistakesCharged = (!Array.isArray(parsed) && typeof parsed.mistakesCharged === "number") ? parsed.mistakesCharged : mistakesCharged;
   }
-  var restoredElapsed = mode === "daily"
-    ? currentElapsedMs()
-    : ((!Array.isArray(parsed) && typeof parsed.elapsedMs === "number") ? parsed.elapsedMs : currentElapsedMs());
+  // Monotonic clock (Jordan's ruling, 2026-11-27): the timer is
+  // total elapsed playing time, so Undo — which restores board
+  // state only — never rewinds it in either mode. A live board
+  // keeps the later of the snapshot's banked time and the current
+  // clock; a board that comes back won refreezes at the
+  // snapshot's recorded time. (Mirrors the native GameSession's
+  // undo: snap.won ? snap.elapsed : max(snap.elapsed, current).)
+  var snapElapsed = (!Array.isArray(parsed) && typeof parsed.elapsedMs === "number") ? parsed.elapsedMs : null;
+  var snapWon = (!Array.isArray(parsed) && typeof parsed.won === "boolean") ? parsed.won : isSolvedBoard();
+  var restoredElapsed = snapWon
+    ? (snapElapsed !== null ? snapElapsed : currentElapsedMs())
+    : Math.max(snapElapsed !== null ? snapElapsed : 0, currentElapsedMs());
 
   if (undoneNum !== null && undoneNum !== undefined && !G.givenByNum.has(undoneNum)) {
     // Preserved behaviour: the number that was just undone becomes
@@ -3884,17 +3903,16 @@ document.getElementById("btn-undo").addEventListener("click", function () {
     }
   }
 
-  // Restore the snapshot's win flag and clock EXACTLY (mirrors
-  // the native GameSession): won comes from the snapshot rather
-  // than being recomputed, the banked elapsed is the snapshot's,
-  // and a new live segment starts only if the snapshot was taken
-  // with the clock running and the game not won. Because the
-  // snapshot's clock predates the undone move, victory-screen
-  // time is excluded when undoing the winning move, and undoing
-  // a Restart of a won board restores the frozen won state.
+  // Restore the snapshot's win flag (mirrors the native
+  // GameSession): won comes from the snapshot rather than being
+  // recomputed. The clock follows restoredElapsed above —
+  // monotonic for a live board, refrozen at the snapshot's
+  // recorded time for a board that comes back won — and a new
+  // live segment starts only if the snapshot was taken with the
+  // clock running and the game not won. Undoing a Restart of a
+  // won board restores the frozen won state.
   // Legacy snapshots without the new fields fall back to the
   // older inference (solved-board check / resumeTimerFrom).
-  var snapWon = (!Array.isArray(parsed) && typeof parsed.won === "boolean") ? parsed.won : isSolvedBoard();
   var clockRunning = (!Array.isArray(parsed) && typeof parsed.clockRunning === "boolean") ? parsed.clockRunning : null;
   if (snapWon) {
     // Undoing a Restart of a won board restores the won state,
